@@ -69,6 +69,25 @@ below, the direction they arrive from. `prefers-reduced-motion` and
 
 ## Structure
 
+Two acts. Act 1 teaches the branch logic on one thread at a time; act 2 shows
+what the same sequence does to a list.
+
+```
+INPUTS  industry · job value · how long cold
+   │
+ACT 1   Lead 1, then Lead 2 — you choose at both decision points.
+        Lead 2's branches are filtered so you cannot land on the same
+        ending twice; the inbox only makes sense if two things happened.
+   │
+ACT 2   Ten leads. Yours are already resolved, the other eight run on a
+        fixed distribution. Step day 0 → 3 → 7 → 14 and watch the tally
+        move. Any thread opens in full.
+   │
+COPY-OUT · GATE · OFFER   unchanged
+```
+
+Act 1's single-lead machine:
+
 Five sends over roughly two weeks, two decision points, three terminal states:
 
 ```
@@ -83,10 +102,38 @@ Msg 1  Day 0 ─┬─ interested ──────► Msg 2a ──► won
 The walkthrough is entirely ungated. Only the copy-out step asks for an email,
 and it can be skipped.
 
+## The campaign distribution
+
+Ten leads always total **3 booked / 1 declined / 6 no reply**, with exactly one
+booking arriving off message 4. This is fixed, not randomised — a run where
+nobody books argues against the tool, and a run where everybody books is not
+believable.
+
+The totals are exact rather than approximate because act 1 filters out branches
+leading to an ending already seen, so the user's two leads always differ. That
+leaves only ten reachable input combinations, and a ten-slot pool minus the
+user's two claims lands on 3/1/6 every time. The message-4 booking can never
+come from the user, because the state machine has no reply branch after message
+4 — so it is always one of the automatic eight.
+
+That exactness is what lets the day-by-day notes state hard numbers ("eight say
+nothing", "six never answer") instead of hedging.
+
 ## Tests
 
-`scratchpad/test.js` in the build session drove Chromium through all four
-terminal paths, back-navigation out of each, the gate (submit / skip /
-unreachable webhook), reduced motion, 360px overflow, and asserted no message
-is byte-identical across two industries. A separate lint pass checked all 96
-input combinations (576 messages) for assembly artifacts.
+Two suites, both run in Chromium at 390px and 360px.
+
+`test.js` covers the act 1 machine: all four terminal paths, back-navigation
+out of each, day stamps, reduced motion, 360px overflow, and that no message is
+byte-identical across two industries.
+
+`test2.js` covers the campaign: that act 1 yields two different endings, that
+the totals land on 3/1/6 and exactly one message-4 booking for every reachable
+combination, that the reveal advances and the tally increments correctly day by
+day, skip-to-result, every thread opening and closing, back navigation from
+each new screen, and that continue reaches the unchanged gate, copy-out and
+offer.
+
+A separate lint pass checks all 96 input combinations (576 messages) for
+assembly artifacts. An unhurried run reaches the final tally in about 40
+seconds.

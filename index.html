@@ -223,6 +223,66 @@ input[type=email]:focus{outline:none; border-color:var(--ink)}
 .offer p:last-of-type{margin-bottom:17px}
 .compliance{margin-top:22px; font-size:12px; color:var(--ink3); line-height:1.5; letter-spacing:-.004em}
 
+/* ---------- act 2: the campaign inbox ----------
+   Status is the only place colour carries meaning here, so the chips are
+   the one strongly coloured element and the accent stays out of their way. */
+.framing{font-size:16px; font-weight:590; letter-spacing:-.016em; line-height:1.35;
+  margin:18px 0 14px; text-align:left}
+.tally{display:flex; flex-direction:column; gap:5px;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:11px 14px 12px; margin-bottom:10px}
+.tally-nums{font-size:14px; color:var(--ink2); letter-spacing:-.008em;
+  font-variant-numeric:tabular-nums; line-height:1.45}
+.tally-nums b{color:var(--ink); font-weight:640}
+.tally-nums i{color:var(--ink3); font-style:normal; margin:0 1px}
+.tally-day{order:-1; font-size:11px; font-weight:590; letter-spacing:.055em;
+  text-transform:uppercase; color:var(--ink3)}
+.daynote{font-size:13.5px; color:var(--ink2); line-height:1.5; letter-spacing:-.006em;
+  margin-bottom:16px}
+
+.rows{display:flex; flex-direction:column; gap:7px; margin-bottom:18px}
+.row{display:flex; gap:11px; width:100%; text-align:left; align-items:flex-start;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:12px 13px; transition:transform 110ms var(--ease), border-color 140ms var(--ease)}
+.row:hover{border-color:var(--line2)}
+.row:active{transform:scale(.99)}
+.row.star{border-color:var(--ink)}
+.row-av{width:30px;height:30px;border-radius:50%;background:var(--in);color:var(--ink2);
+  display:grid;place-items:center;font-size:12.5px;font-weight:590;flex:0 0 auto}
+.row-main{flex:1; min-width:0}
+.row-top{display:flex; align-items:center; justify-content:space-between; gap:8px}
+.row-top b{font-size:14.5px; font-weight:590; letter-spacing:-.012em}
+.row-main p{font-size:13px; color:var(--ink3); letter-spacing:-.006em; margin-top:2px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.row.star .row-main p{white-space:normal; color:var(--ink2)}
+.flag{display:inline-block; margin-top:6px; font-size:11px; font-weight:590;
+  letter-spacing:-.002em; color:var(--ink); background:var(--accent);
+  border-radius:5px; padding:2px 7px}
+.mine{display:block; margin-top:5px; font-size:11.5px; color:var(--ink3); letter-spacing:-.002em}
+
+.chip{flex:0 0 auto; font-size:11px; font-weight:590; letter-spacing:.02em;
+  padding:3px 8px; border-radius:6px; white-space:nowrap}
+.chip.booked  {background:#1d1d1f; color:#fff}
+.chip.declined{background:#f0e6e4; color:#8a3d2f}
+.chip.noreply {background:rgba(0,0,0,.05); color:var(--ink3)}
+.chip.waiting {background:rgba(0,0,0,.05); color:var(--ink2)}
+
+.thread-head{display:flex; align-items:center; gap:11px; margin-bottom:12px}
+.thread-head .back{width:38px; height:38px}
+.thread-head div{flex:1; min-width:0}
+.thread-head b{display:block; font-size:15px; font-weight:590; letter-spacing:-.014em}
+.thread-head small{color:var(--ink3); font-size:12px; letter-spacing:-.004em}
+
+@media (prefers-contrast:more){
+  .chip.declined{background:#fff; color:#7a2e21; border:1px solid currentColor}
+  .chip.noreply,.chip.waiting{border:1px solid var(--line2)}
+}
+
+@media (max-width:374px){
+  .row-top b{font-size:14px}
+  .chip{font-size:10.5px; padding:3px 6px}
+}
+
 @media (max-width:374px){
   .wrap{padding:16px 12px 0}
   .thread{padding:12px 10px 14px}
@@ -279,6 +339,7 @@ var CONFIG = {
   revealDays: [0, 3, 7, 14],
   act2: {
     framing:    'That’s two. Here’s what the other eight did.',
+    enterCta:   'See the other eight',
     lede:       'Same three questions, same five messages, sent to ten old leads on the same schedule. You handled the first two yourself.',
     tally:      { messaged:'messaged', booked:'booked', declined:'declined', noreply:'no reply', waiting:'still out' },
     skip:       'Skip to the result',
@@ -589,6 +650,104 @@ function buildSequence(industryKey, valueKey, coldKey){
   };
 }
 
+/* ===================== CAMPAIGN =====================
+   Ten leads, one fixed distribution. Not randomised: a run where nobody
+   books argues against the tool, and a run where everybody books is not
+   believable. Act 1 forces the user's two leads to different endings, so
+   only ten input combinations are reachable and every one of them totals
+   exactly 3 booked / 1 declined / 6 no reply.                            */
+
+var RESOLVE_DAY = { m1:0, m2b:0, m2c:3, m4:14, end:14 };
+
+/* where a finished act-1 lead lands in the campaign */
+function slotFor(rec){
+  if (rec.outcome === 'won')    return ['booked',   rec.stage];   /* m1 or m2c */
+  if (rec.outcome === 'parked') return ['declined', 'm2b'];
+  return ['noreply', 'end'];
+}
+
+function buildCampaign(userLeads){
+  var pool = [ ['booked','m1'], ['booked','m2c'], ['booked','m4'], ['declined','m2b'] ];
+  for (var i = 0; i < 6; i++) pool.push(['noreply','end']);
+
+  var leads = [], names = COPY.campaign.names, u, j, ix, want;
+
+  /* the user's leads claim their slot out of the pool first */
+  for (u = 0; u < userLeads.length; u++){
+    want = slotFor(userLeads[u]);
+    ix = -1;
+    for (j = 0; j < pool.length; j++)
+      if (pool[j][0] === want[0] && pool[j][1] === want[1]){ ix = j; break; }
+    if (ix < 0)
+      for (j = 0; j < pool.length; j++) if (pool[j][0] === want[0]){ ix = j; break; }
+    if (ix >= 0) pool.splice(ix, 1);
+    leads.push({ name:names[u], outcome:want[0], stage:want[1], byUser:true });
+  }
+
+  /* spread what is left through the list so the resolved ones do not clump
+     at the top and the message 4 booking is not always last */
+  var spread = [2,5,0,7,3,1,6,4], slots = [];
+  for (j = 0; j < pool.length; j++) slots[spread[j]] = pool[j];
+
+  var counters = {};
+  for (j = 0; j < slots.length; j++){
+    if (!slots[j]) continue;
+    leads.push({ name:names[leads.length], outcome:slots[j][0], stage:slots[j][1], byUser:false });
+  }
+
+  /* attach the reply each thread came back with */
+  for (j = 0; j < leads.length; j++){
+    var L = leads[j];
+    L.resolveDay = RESOLVE_DAY[L.stage];
+    if (L.outcome === 'noreply'){ L.reply = null; continue; }
+    if (L.byUser){
+      var I = COPY.industries[S.industry], r = COPY.tones[S.value].register;
+      L.reply = (L.outcome === 'booked') ? I.yes[r] : I.no[r];
+    } else {
+      var bank = COPY.campaign.replies[L.stage] || [];
+      counters[L.stage] = (counters[L.stage] || 0);
+      L.reply = bank[counters[L.stage] % bank.length];
+      counters[L.stage]++;
+    }
+  }
+  return leads;
+}
+
+/* the full thread for one campaign lead, from the same generated sequence */
+function threadFor(L){
+  var out = [ { t:'out', msg:'m1', day:'m1' } ];
+  if (L.stage === 'm1' || L.stage === 'm2b'){
+    out.push({ t:'in', text:L.reply });
+    out.push({ t:'out', msg:(L.stage === 'm1' ? 'm2a' : 'm2b'), day:'reply' });
+    return out;
+  }
+  out.push({ t:'silent', text:'three days pass · nothing' });
+  out.push({ t:'out', msg:'m2c', day:'m2c' });
+  if (L.stage === 'm2c'){
+    out.push({ t:'in', text:L.reply });
+    out.push({ t:'out', msg:'m2a', day:'reply' });
+    return out;
+  }
+  out.push({ t:'silent', text:'four more days · still nothing' });
+  out.push({ t:'out', msg:'m3', day:'m3' });
+  out.push({ t:'silent', text:'a week goes by · still nothing' });
+  out.push({ t:'out', msg:'m4', day:'m4' });
+  if (L.stage === 'm4'){
+    out.push({ t:'in', text:L.reply });
+    out.push({ t:'out', msg:'m2a', day:'reply' });
+  }
+  return out;
+}
+
+function tally(){
+  var d = CONFIG.revealDays[S.dayIdx], t = { booked:0, declined:0, noreply:0, waiting:0 };
+  for (var i = 0; i < S.campaign.length; i++){
+    var L = S.campaign[i];
+    if (L.resolveDay <= d) t[L.outcome]++; else t.waiting++;
+  }
+  return t;
+}
+
 /* ============================= CONFIG END ============================= */
 
 /* ============================ STATE MACHINE ============================
@@ -597,8 +756,8 @@ function buildSequence(industryKey, valueKey, coldKey){
 var GRAPH = {
   m1:      { k:'send', msg:'m1', day:'m1', next:'d1' },
   d1:      { k:'choice', prompt:'What does the lead do?', opts:[
-               { kind:'yes',  next:'ry1' },
-               { kind:'no',   next:'rn1' },
+               { kind:'yes',  next:'ry1', term:'won' },
+               { kind:'no',   next:'rn1', term:'parked' },
                { kind:'none', next:'s1', label:'They don’t reply at all', tag:'The branch most campaigns die in' } ] },
   ry1:     { k:'reply', kind:'yes', next:'m2a' },
   rn1:     { k:'reply', kind:'no',  next:'m2b' },
@@ -609,8 +768,8 @@ var GRAPH = {
   m2c:     { k:'send', msg:'m2c', day:'m2c',   next:'d2' },
 
   d2:      { k:'choice', prompt:'And this time?', opts:[
-               { kind:'yes',  next:'ry2' },
-               { kind:'none', next:'s2', label:'Still nothing', tag:'Most people stop here. Two messages left.' } ] },
+               { kind:'yes',  next:'ry2', term:'won' },
+               { kind:'none', next:'s2', term:'cleaned', label:'Still nothing', tag:'Most people stop here. Two messages left.' } ] },
   ry2:     { k:'reply', kind:'yes', next:'m2a' },
   s2:      { k:'silence', text:'four more days · still nothing', next:'m3' },
 
@@ -637,7 +796,15 @@ var S = {
   animate:'m1',
   outcome:null,
   gated:true,
-  copied:false
+  copied:false,
+
+  /* act 1 runs once per guided lead; act 2 works off what they produced */
+  leadIdx:0,
+  leadOutcomes:[],
+  campaign:null,
+  dayIdx:0,
+  openLead:null,
+  inboxScroll:0
 };
 
 /* ============================ HELPERS ============================ */
@@ -651,6 +818,12 @@ function esc(t){
   });
 }
 function node(id){ return GRAPH[id]; }
+function stageOfTrail(outcome){
+  if (outcome === 'parked')  return 'm2b';
+  if (outcome === 'cleaned') return 'end';
+  /* won: booked off message 1, or off the day-3 nudge */
+  return S.trail.indexOf('ry2') > -1 ? 'm2c' : 'm1';
+}
 function last(){ return S.trail[S.trail.length - 1]; }
 function cur(){ return node(last()); }
 function bandLabel(k){ return COPY.tones[k].label.replace(/\{c\}/g, S.cur); }
@@ -672,6 +845,21 @@ function pushChain(id){
   var tail = cur();
   S.animate = (tail && tail.k === 'send') ? last() : null;
 }
+/* on the second guided lead, hide branches that only lead back to an ending
+   already seen — the inbox makes no sense unless two different things happened */
+function openOpts(n){
+  var seen = {}, i;
+  for (i = 0; i < S.leadIdx; i++){
+    if (S.leadOutcomes[i]) seen[S.leadOutcomes[i].outcome] = true;
+  }
+  var out = [];
+  for (i = 0; i < n.opts.length; i++){
+    if (n.opts[i].term && seen[n.opts[i].term]) continue;
+    out.push(n.opts[i]);
+  }
+  return out.length ? out : n.opts;
+}
+
 function go(id){ S.history.push(S.trail.slice()); pushChain(id); render(); }
 function back(){
   if (!S.history.length) return;
@@ -761,8 +949,9 @@ function screenWalk(){
   var n = cur(), I = COPY.industries[S.industry], r = COPY.tones[S.value].register;
   var body = '<div class="screen on">' + railHtml()
     + '<div class="phone">'
-      + '<div class="phone-top"><div class="av">'+esc(I.label.charAt(0))+'</div>'
-        + '<div><b>Your old lead</b><small>'+esc(I.who)+' · '+esc(bandLabel(S.value))+'</small></div></div>'
+      + '<div class="phone-top"><div class="av">'+esc(COPY.campaign.names[S.leadIdx].charAt(0))+'</div>'
+        + '<div><b>'+esc(COPY.campaign.names[S.leadIdx])+'</b><small>'+esc(I.who)+' · lead '
+          +(S.leadIdx+1)+' of '+CONFIG.campaignSize+'</small></div></div>'
       + '<div class="thread" id="thread">'+threadHtml()+'</div>'
     + '</div>';
 
@@ -786,15 +975,18 @@ function screenWalk(){
       body += '<div class="note"><b>'+esc(MSG_TITLE[prevSend.msg])+' · why this works</b><p>'
             + esc(COPY.notes[pk] || COPY.notes[prevSend.msg])+'</p></div>';
     }
-    var o = '';
-    for (var i = 0; i < n.opts.length; i++){
-      var op = n.opts[i];
+    var opts = openOpts(n), o = '';
+    for (var i = 0; i < opts.length; i++){
+      var op = opts[i];
       var label = op.label || I[op.kind][r];
       var quiet = op.kind === 'none';
       o += '<button class="reply'+(quiet?' quiet':'')+'" data-go="'+op.next+'">'+esc(label)
          + (op.tag ? '<span class="tag">'+esc(op.tag)+'</span>' : '') + '</button>';
     }
-    body += '<div class="choices"><h4>'+esc(n.prompt)+'</h4>'+o+'</div>'
+    var prompt = (opts.length < n.opts.length)
+      ? 'This one goes differently — you have seen where the other branch ends.'
+      : n.prompt;
+    body += '<div class="choices"><h4>'+esc(prompt)+'</h4>'+o+'</div>'
       + '<div class="nav"><button class="back" id="back" aria-label="Back"'+(S.history.length?'':' disabled')+'>'
       + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>';
   }
@@ -809,17 +1001,108 @@ function offerLineHtml(){
 
 function screenEnd(){
   var e = COPY.endings[S.outcome];
+  var more = S.leadIdx < CONFIG.act1Leads - 1;
+  var cta  = more ? 'Next lead — ' + COPY.campaign.names[S.leadIdx + 1]
+                  : CONFIG.act2.enterCta;
   return '<div class="screen on">' + railHtml()
     + '<div class="end">'
       + '<span class="badge '+S.outcome+'">'+esc(e.badge)+'</span>'
       + '<h2>'+esc(e.title)+'</h2>'
       + '<div class="body">'+esc(e.body).replace(/\n\n/g,'<br><br>')+'</div>'
-      + '<button class="btn" id="tocopy">Get all five messages as text</button>'
+      + (more ? '' : '<p class="framing">'+esc(CONFIG.act2.framing)+'</p>')
+      + '<button class="btn" id="'+(more?'nextlead':'toact2')+'">'+esc(cta)+'</button>'
       + '<div class="nav" style="margin-top:9px">'
-        + '<button class="btn ghost sm" id="back">Back a step</button>'
-        + '<button class="btn ghost sm" id="restart">Try another branch</button></div>'
-      + offerLineHtml()
+        + '<button class="btn ghost sm" id="back">Back a step</button></div>'
     + '</div></div>';
+}
+
+function screenInbox(){
+  var C = CONFIG.act2, t = tally(), day = CONFIG.revealDays[S.dayIdx];
+  var lastDay = S.dayIdx >= CONFIG.revealDays.length - 1;
+
+  /* tally bar — the whole point of act 2 */
+  var chips = '<b>' + CONFIG.campaignSize + '</b> ' + esc(C.tally.messaged);
+  var parts = [['booked', t.booked], ['declined', t.declined], ['noreply', t.noreply]];
+  for (var q = 0; q < parts.length; q++)
+    if (parts[q][1]) chips += ' <i>·</i> <b>' + parts[q][1] + '</b> ' + esc(C.tally[parts[q][0]]);
+  if (t.waiting) chips += ' <i>·</i> <b>' + t.waiting + '</b> ' + esc(C.tally.waiting);
+
+  var rows = '';
+  for (var i = 0; i < S.campaign.length; i++){
+    var L = S.campaign[i];
+    var live = L.resolveDay <= day;
+    var st = live ? L.outcome : 'waiting';
+    var preview = live && L.reply ? L.reply
+                : live ? 'Never replied.'
+                : 'Message sent. Nothing back yet.';
+    var star = (live && L.outcome === 'booked' && L.stage === 'm4');
+    rows += '<button class="row'+(star?' star':'')+'" data-lead="'+i+'">'
+          + '<div class="row-av">'+esc(L.name.charAt(0))+'</div>'
+          + '<div class="row-main"><div class="row-top"><b>'+esc(L.name)+'</b>'
+          + '<span class="chip '+st+'">'+esc(COPY.campaign.statusLabels[st])+'</span></div>'
+          + '<p>'+esc(preview)+'</p>'
+          + (star ? '<span class="flag">'+esc(C.m4Flag)+'</span>' : '')
+          + (L.byUser ? '<span class="mine">'+esc(COPY.campaign.handled)+'</span>' : '')
+          + '</div></button>';
+  }
+
+  var head = lastDay
+    ? '<div class="end" style="text-align:left"><h2>'+esc(COPY.campaign.done.title)+'</h2>'
+      + '<div class="body" style="margin-bottom:0">'
+      + esc(COPY.campaign.done.body).replace(/\n\n/g,'<br><br>')+'</div></div>'
+    : '<p class="sub" style="margin-bottom:18px">'+esc(C.lede)+'</p>';
+
+  var ctrl = lastDay
+    ? '<button class="btn" id="tocopy">'+esc(C.continueCta)+'</button>'
+      + '<div class="nav" style="margin-top:9px">'
+      + '<button class="btn ghost sm" id="dayback">Back a day</button>'
+      + '<button class="btn ghost sm" id="restart">Start again</button></div>'
+      + offerLineHtml()
+    : '<button class="btn" id="nextday">'+esc(C.advance)+' '
+      + CONFIG.revealDays[S.dayIdx + 1] + '</button>'
+      + '<div class="nav" style="margin-top:9px">'
+      + '<button class="btn ghost sm" id="dayback">Back</button>'
+      + '<button class="btn ghost sm" id="skipday">'+esc(C.skip)+'</button></div>';
+
+  var bars = '';
+  for (var b = 0; b < CONFIG.revealDays.length; b++)
+    bars += '<i class="'+(b < S.dayIdx ? 'done' : b === S.dayIdx ? 'now' : '')+'"></i>';
+
+  return '<div class="screen on">'
+    + '<div class="rail">'+bars+'</div>'
+    + head
+    + '<div class="tally"><div class="tally-nums">'+chips+'</div>'
+      + '<div class="tally-day">Day '+day+'</div></div>'
+    + '<p class="daynote">'+esc(COPY.campaign.dayNotes[day])+'</p>'
+    + '<div class="rows">'+rows+'</div>'
+    + ctrl
+    + '<p class="compliance">'+esc(CONFIG.compliance)+'</p></div>';
+}
+
+function screenThread(){
+  var L = S.campaign[S.openLead], beats = threadFor(L), lastLabel = null, body = '';
+  for (var i = 0; i < beats.length; i++){
+    var bt = beats[i];
+    if (bt.t === 'out'){
+      var dl = DAY_LABEL[bt.day];
+      if (dl !== lastLabel){ body += '<div class="daystamp">'+esc(dl)+'</div>'; lastLabel = dl; }
+      body += '<div class="bubble out">'+esc(S.seq[bt.msg])+'</div>';
+    } else if (bt.t === 'in'){
+      body += '<div class="bubble in">'+esc(bt.text)+'</div>';
+    } else {
+      body += '<div class="bubble silent">'+esc(bt.text)+'</div>';
+    }
+  }
+  var st = L.resolveDay <= CONFIG.revealDays[S.dayIdx] ? L.outcome : 'waiting';
+  return '<div class="screen on">'
+    + '<div class="thread-head"><button class="back" id="toinbox" aria-label="Back to inbox">'
+      + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<div><b>'+esc(L.name)+'</b><small>'+esc(COPY.industries[S.industry].who)
+      + (L.byUser ? ' · '+esc(COPY.campaign.handled) : '')+'</small></div>'
+      + '<span class="chip '+st+'">'+esc(COPY.campaign.statusLabels[st])+'</span></div>'
+    + '<div class="phone"><div class="thread">'+body+'</div></div>'
+    + '<button class="btn ghost" id="toinbox2" style="margin-top:14px">Back to all ten</button>'
+    + '</div>';
 }
 
 function screenGate(){
@@ -887,15 +1170,29 @@ function on(id, ev, fn){ var el = document.getElementById(id); if (el) el.addEve
 
 function render(){
   var n = cur();
-  if (S.screen === 'walk' && n && n.k === 'end'){ S.outcome = n.outcome; S.screen = 'end'; }
+  if (S.screen === 'walk' && n && n.k === 'end'){
+    S.outcome = n.outcome;
+    /* record where this guided lead landed. idempotent, so replaying
+       forward after a back does not double-count */
+    S.leadOutcomes[S.leadIdx] = { outcome:n.outcome, stage:stageOfTrail(n.outcome) };
+    S.leadOutcomes.length = S.leadIdx + 1;
+    S.screen = 'end';
+  }
 
-  if      (S.screen === 'intro') app.innerHTML = screenIntro();
-  else if (S.screen === 'walk')  app.innerHTML = screenWalk();
-  else if (S.screen === 'end')   app.innerHTML = screenEnd();
-  else if (S.screen === 'gate')  app.innerHTML = screenGate();
-  else if (S.screen === 'copy')  app.innerHTML = screenCopy();
+  if      (S.screen === 'intro')  app.innerHTML = screenIntro();
+  else if (S.screen === 'walk')   app.innerHTML = screenWalk();
+  else if (S.screen === 'end')    app.innerHTML = screenEnd();
+  else if (S.screen === 'inbox')  app.innerHTML = screenInbox();
+  else if (S.screen === 'thread') app.innerHTML = screenThread();
+  else if (S.screen === 'gate')   app.innerHTML = screenGate();
+  else if (S.screen === 'copy')   app.innerHTML = screenCopy();
 
   wire();
+
+  /* the inbox keeps its place when you come back out of a thread */
+  var rowsEl = document.querySelector('.rows');
+  if (S.screen === 'inbox' && rowsEl) window.scrollTo(0, S.inboxScroll);
+  if (S.screen === 'thread') window.scrollTo(0, 0);
 
   var cr = document.getElementById('crumbs');
   if (cr) cr.scrollLeft = cr.scrollWidth;
@@ -943,9 +1240,51 @@ function wire(){
     if (S.screen === 'end'){ S.screen = 'walk'; }
     back();
   });
+
+  /* ---- act 1 -> act 2 ---- */
+  on('nextlead','click', function(){
+    S.leadIdx++;
+    S.trail = ['m1']; S.history = []; S.animate = 'm1'; S.screen = 'walk';
+    render();
+  });
+  on('toact2','click', function(){
+    S.campaign = buildCampaign(S.leadOutcomes);
+    S.dayIdx = 0; S.screen = 'inbox'; S.inboxScroll = 0;
+    render();
+  });
+
+  /* ---- the reveal ---- */
+  on('nextday','click', function(){
+    if (S.dayIdx < CONFIG.revealDays.length - 1) S.dayIdx++;
+    render();
+  });
+  on('skipday','click', function(){
+    S.dayIdx = CONFIG.revealDays.length - 1;
+    render();
+  });
+  on('dayback','click', function(){
+    if (S.dayIdx > 0){ S.dayIdx--; render(); }
+    else { S.screen = 'end'; render(); }        /* back out of act 2 entirely */
+  });
+
+  /* ---- open and close a thread ---- */
+  var rws = document.querySelectorAll('[data-lead]');
+  for (var w = 0; w < rws.length; w++){
+    rws[w].addEventListener('click', function(e){
+      S.inboxScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+      S.openLead = parseInt(e.currentTarget.getAttribute('data-lead'), 10);
+      S.screen = 'thread';
+      render();
+    });
+  }
+  var backToInbox = function(){ S.screen = 'inbox'; S.openLead = null; render(); };
+  on('toinbox','click', backToInbox);
+  on('toinbox2','click', backToInbox);
   on('restart','click', function(){
     S.trail = ['m1']; S.history = []; S.animate = null;
     S.screen = 'intro'; S.copied = false; S.gated = CONFIG.gateEnabled;
+    S.leadIdx = 0; S.leadOutcomes = []; S.campaign = null;
+    S.dayIdx = 0; S.openLead = null; S.inboxScroll = 0;
     render();
   });
 
