@@ -274,6 +274,19 @@ var CONFIG = {
 
   days: { m1:0, m2c:3, m3:7, m4:14 },
 
+  act1Leads: 2,
+  campaignSize: 10,
+  revealDays: [0, 3, 7, 14],
+  act2: {
+    framing:    'That’s two. Here’s what the other eight did.',
+    lede:       'Same three questions, same five messages, sent to ten old leads on the same schedule. You handled the first two yourself.',
+    tally:      { messaged:'messaged', booked:'booked', declined:'declined', noreply:'no reply', waiting:'still out' },
+    skip:       'Skip to the result',
+    advance:    'Advance to day',
+    continueCta:'Get the sequence',
+    m4Flag:     'Booked off message 4'
+  },
+
   compliance: 'These messages assume the person already asked you for a price. Opt-out wording and the rules where you operate are your responsibility, not this tool’s.'
 };
 
@@ -510,6 +523,42 @@ COPY.endings = {
         body:'This is the branch people skip, and skipping it is expensive. Owners either argue with the no or vanish mid-conversation, and both close the door on the job in eighteen months.\n\nA clean exit keeps you as the person they call next time, and it takes one message.' },
   cleaned:{ badge:'List cleaned', title:'Four messages, no reply, and you have still gained.',
         body:'You now know that lead is genuinely cold, which you did not know this morning. That is worth something on its own — you stop paying attention to a name that was never coming back.\n\nAnd message 4 is the one that most often gets an answer, which is exactly why it is the one owners are most reluctant to send.' }
+};
+
+COPY.campaign = {
+
+  /* ten leads. names only — every thread uses the same generated sequence,
+     which is what a real campaign actually does. */
+  names: ['Sarah M.','Dan R.','Priya K.','Tom H.','Michael O.',
+          'Chloe B.','James W.','Aisha N.','Gary P.','Ellie T.'],
+
+  /* short replies for the threads that resolve on their own, keyed by the
+     message they came back on. the message 4 reply is the one that matters. */
+  replies: {
+    m1:  ['yeah go on then, what have you got?',
+          'perfect timing actually, yes please'],
+    m2c: ['sorry, only just seen this. still interested',
+          'yes — meant to reply to the first one and forgot'],
+    m4:  ['honestly i’d forgotten all about it. yes, still want it doing'],
+    m2b: ['we got it done last year, thanks anyway',
+          'not for us in the end, sorry']
+  },
+
+  /* what each day of the campaign actually teaches */
+  dayNotes: {
+    0:  'Everyone gets message 1 on the same morning. Two come straight back — one wants it, one does not. Eight say nothing, which is the normal case, not the failure case.',
+    3:  'Message 2c goes to the eight who stayed quiet. One of them replies. They were never a no, they just put the phone down.',
+    7:  'Message 3 goes to the seven still quiet. Nothing comes back today. This is the day owners give up and delete the list.',
+    14: 'Message 4 — the one you did not want to send — goes to the seven. One books. Six never answer, and now you know that for certain.'
+  },
+
+  statusLabels: { booked:'Booked', declined:'Declined', noreply:'No reply', waiting:'Waiting' },
+  handled: 'you handled this one',
+
+  done: {
+    title: 'Ten leads, four messages, three bookings.',
+    body:  'You already had these people. They asked you for a price once and then life happened — to them, not to you.\n\nThe six who never answered are not a loss. You spent nothing to find out, and you will stop wondering about them.\n\nThe one who booked on message 4 is the whole argument. Most owners stop after message 2.'
+  }
 };
 
 /* ============================ ASSEMBLY ============================ */
