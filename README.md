@@ -9,9 +9,9 @@ Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
 ## Deploy
 
 `index.html` is the whole thing. Drag it into Netlify. No build step, no
-dependencies, no backend, no API keys, nothing metered. The only network
-request is an optional lead webhook, plus one webfont that has a full system
-fallback if it fails.
+dependencies, no backend, no API keys, nothing metered. The optional lead
+webhook is the only network request the page can make; with `webhookUrl` blank
+it makes none at all.
 
 ## Configure
 
@@ -49,6 +49,23 @@ Not 96 hand-written sequences. Three layers assembled at runtime by
 
 Each pack carries two registers (`q` quick / `c` considered); the tone template
 picks which one applies. All strings live in `COPY`; none are inline in logic.
+
+## Design
+
+Light, flat, no gradients. Type is set in the platform system font, which
+already ships optical sizing and tracking tables; tracking is size-specific
+(tight on the display line, near zero at body, open on small uppercase
+labels) rather than one value everywhere.
+
+Colour is deliberately scarce. Near-black carries every primary action, and
+the accent appears in exactly three places: the mark, the rule on the teaching
+note, and the underline under the headline — under it rather than in it,
+because the accent on white would fail contrast.
+
+Press feedback lands on pointer-down, not on release. Transitions are
+critically damped (no overshoot) at a ~360ms response; messages enter from
+below, the direction they arrive from. `prefers-reduced-motion` and
+`prefers-contrast` are both honoured.
 
 ## Structure
 
