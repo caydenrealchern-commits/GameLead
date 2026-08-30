@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reactivation Sequence Builder</title>
+<meta name="description" content="Build a five-message SMS sequence that wakes up your old leads — and see what to send when they go quiet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0e12; --bg2:#14161d; --line:#262a35; --line2:#333949;
+  --ink:#f4f5f7; --mut:#969ca9; --mut2:#6f7684;
+  --volt:#c8f251; --volt-d:#a9d635;
+  --paper:#ffffff; --paper-ink:#101217; --paper-mut:#7c8492;
+  --in:#eceef2; --out:#101217;
+  --r:14px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 48px;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(720px 460px at 50% -8%, rgba(200,242,81,.10), transparent 70%);
+}
+.wrap{position:relative; z-index:1; width:100%; max-width:430px; margin:0 auto; padding:20px 14px 0}
+h1,h2,h3{margin:0; letter-spacing:-.02em; line-height:1.2}
+p{margin:0}
+button{font:inherit; color:inherit; border:0; background:none; cursor:pointer}
+a{color:var(--volt)}
+
+/* ---------- masthead ---------- */
+.mast{display:flex; align-items:center; gap:9px; margin-bottom:22px}
+.mark{width:26px;height:26px;border-radius:8px;background:var(--volt);display:grid;place-items:center;flex:0 0 auto}
+.mark svg{display:block}
+.mast b{font-size:13px; font-weight:600; letter-spacing:.01em}
+.mast span{font-size:13px; color:var(--mut2)}
+
+/* ---------- screens ---------- */
+.screen{display:none}
+.screen.on{display:block; animation:rise .34s var(--ease) both}
+@keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+
+/* ---------- intro ---------- */
+.eyebrow{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--volt); margin-bottom:12px}
+.h1{font-size:31px; font-weight:700; letter-spacing:-.035em; margin-bottom:12px}
+.h1 em{font-style:normal; color:var(--volt)}
+.sub{color:var(--mut); font-size:15px; margin-bottom:26px}
+
+.field{margin-bottom:15px}
+.field label{display:block; font-size:12px; font-weight:600; color:var(--mut); margin-bottom:7px; letter-spacing:.01em}
+.selwrap{position:relative}
+.selwrap::after{
+  content:''; position:absolute; right:16px; top:50%; width:7px; height:7px; margin-top:-5px;
+  border-right:2px solid var(--mut); border-bottom:2px solid var(--mut);
+  transform:rotate(45deg); pointer-events:none
+}
+select{
+  -webkit-appearance:none; appearance:none; width:100%;
+  background:var(--bg2); border:1px solid var(--line); border-radius:var(--r);
+  color:var(--ink); padding:14px 40px 14px 14px; font-size:15px; font-weight:500;
+  transition:border-color .18s
+}
+select:focus{outline:none; border-color:var(--volt)}
+select:invalid,select.empty{color:var(--mut2)}
+
+.curr{display:flex; align-items:center; gap:10px; margin:18px 0 22px}
+.curr span{font-size:12px; color:var(--mut2)}
+.toggle{display:inline-flex; background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:3px}
+.toggle button{padding:5px 13px; border-radius:7px; font-size:13px; font-weight:600; color:var(--mut)}
+.toggle button[aria-pressed="true"]{background:var(--volt); color:#0d0e12}
+
+.btn{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  background:var(--volt); color:#0d0e12; font-weight:650; font-size:15.5px;
+  padding:15px 18px; border-radius:var(--r); text-decoration:none;
+  transition:transform .14s var(--ease), opacity .18s
+}
+.btn:active{transform:scale(.985)}
+.btn[disabled]{background:var(--bg2); color:var(--mut2); border:1px solid var(--line); cursor:not-allowed}
+.btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line2); font-weight:550}
+.btn.alt{background:#232839; color:var(--ink); border:1px solid var(--line2)}
+.btn.sm{padding:12px 16px; font-size:14px}
+
+.foot{margin-top:16px; font-size:12.5px; color:var(--mut2); text-align:center; line-height:1.5}
+
+/* ---------- rail ---------- */
+.rail{display:flex; gap:5px; margin-bottom:14px}
+.rail i{flex:1; height:3px; border-radius:2px; background:var(--line); transition:background .3s}
+.rail i.done{background:var(--line2)}
+.rail i.now{background:var(--volt)}
+.crumbs{
+  display:flex; gap:6px; align-items:center; overflow-x:auto; margin-bottom:14px;
+  scrollbar-width:none; -ms-overflow-style:none; padding-bottom:2px
+}
+.crumbs::-webkit-scrollbar{display:none}
+.crumb{
+  flex:0 0 auto; font-size:11px; font-weight:600; letter-spacing:.02em;
+  padding:4px 9px; border-radius:999px; background:var(--bg2); border:1px solid var(--line); color:var(--mut2); white-space:nowrap
+}
+.crumb.br{background:transparent; border-style:dashed; color:var(--mut2); font-weight:500; text-transform:lowercase}
+.crumb.on{background:var(--volt); border-color:var(--volt); color:#0d0e12}
+
+/* ---------- phone ---------- */
+.phone{
+  background:var(--paper); border-radius:26px; padding:0 0 14px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06), 0 24px 60px -20px rgba(0,0,0,.85);
+  overflow:hidden
+}
+.phone-top{
+  display:flex; align-items:center; gap:9px; padding:12px 14px;
+  border-bottom:1px solid #e9ebef; background:#fbfbfc
+}
+.av{width:28px;height:28px;border-radius:50%;background:#dfe3ea;color:#5c6472;display:grid;place-items:center;font-size:11px;font-weight:700;flex:0 0 auto}
+.phone-top b{color:var(--paper-ink); font-size:13.5px; font-weight:600; display:block; line-height:1.25}
+.phone-top small{color:var(--paper-mut); font-size:11px}
+.thread{padding:14px 12px 4px; min-height:212px; display:flex; flex-direction:column; gap:9px}
+.daystamp{align-self:center; font-size:10.5px; font-weight:650; letter-spacing:.06em; text-transform:uppercase; color:#a4abb8; margin:4px 0 2px}
+.bubble{
+  max-width:83%; padding:9px 13px; border-radius:18px; font-size:14.5px; line-height:1.42;
+  white-space:pre-wrap; word-wrap:break-word; overflow-wrap:anywhere;
+  animation:pop .26s var(--ease) both
+}
+@keyframes pop{from{opacity:0; transform:translateY(7px) scale(.985)} to{opacity:1; transform:none}}
+.bubble.out{align-self:flex-end; background:var(--out); color:#fff; border-bottom-right-radius:6px}
+.bubble.in{align-self:flex-start; background:var(--in); color:var(--paper-ink); border-bottom-left-radius:6px}
+.bubble.silent{
+  align-self:center; background:transparent; color:#a4abb8; font-size:12px; font-style:italic;
+  border:1px dashed #dcdfe6; border-radius:999px; padding:5px 12px; max-width:none
+}
+.typing{align-self:flex-end; background:var(--in); border-radius:18px; border-bottom-right-radius:6px; padding:11px 14px; display:flex; gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:#9aa2b0; animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.18s}
+.typing i:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,60%,100%{opacity:.32; transform:translateY(0)} 30%{opacity:1; transform:translateY(-2px)}}
+
+/* ---------- note ---------- */
+.note{
+  margin-top:14px; background:var(--bg2); border:1px solid var(--line);
+  border-left:2px solid var(--volt); border-radius:12px; padding:13px 14px
+}
+.note b{display:block; font-size:10.5px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--volt); margin-bottom:6px}
+.note p{font-size:13.5px; color:#cdd2db; line-height:1.55}
+
+/* ---------- choices ---------- */
+.choices{margin-top:16px}
+.choices h4{font-size:12px; font-weight:600; color:var(--mut); margin:0 0 9px; letter-spacing:.01em}
+.reply{
+  display:block; width:100%; text-align:left; margin-bottom:8px;
+  background:var(--bg2); border:1px solid var(--line); border-radius:14px;
+  padding:13px 15px; font-size:14.5px; color:var(--ink);
+  transition:transform .14s var(--ease), border-color .18s, background .18s
+}
+.reply:hover{border-color:var(--line2)}
+.reply:active{transform:scale(.99)}
+.reply.quiet{color:var(--mut2); border-style:dashed; font-style:italic}
+.reply .tag{display:block; font-size:11px; color:var(--mut2); font-style:normal; margin-top:3px}
+
+.nav{display:flex; gap:9px; margin-top:16px}
+.nav .btn{flex:1}
+.back{flex:0 0 auto; width:52px; background:transparent; border:1px solid var(--line2); border-radius:var(--r); display:grid; place-items:center; color:var(--mut)}
+.back:disabled{opacity:.35; cursor:not-allowed}
+
+/* ---------- endings ---------- */
+.end{text-align:center; padding:8px 0 0}
+.badge{
+  display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; padding:6px 12px; border-radius:999px; margin-bottom:16px
+}
+.badge.won{background:rgba(200,242,81,.14); color:var(--volt); border:1px solid rgba(200,242,81,.3)}
+.badge.parked{background:rgba(150,156,169,.12); color:var(--mut); border:1px solid var(--line2)}
+.badge.cleaned{background:rgba(150,156,169,.12); color:var(--mut); border:1px solid var(--line2)}
+.end h2{font-size:24px; font-weight:700; margin-bottom:10px; letter-spacing:-.03em}
+.end .body{color:var(--mut); font-size:14.5px; line-height:1.6; text-align:left; background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:15px; margin-bottom:16px}
+.quietoffer{font-size:13px; color:var(--mut2); line-height:1.6; margin:16px 0 0; text-align:left}
+.quietoffer a{font-weight:600}
+
+/* ---------- gate / copyout ---------- */
+.card{background:var(--bg2); border:1px solid var(--line); border-radius:18px; padding:18px}
+.card h2{font-size:21px; font-weight:700; margin-bottom:8px; letter-spacing:-.03em}
+.card .lede{color:var(--mut); font-size:14px; margin-bottom:16px; line-height:1.55}
+input[type=email]{
+  width:100%; background:var(--bg); border:1px solid var(--line2); border-radius:var(--r);
+  color:var(--ink); padding:14px; font-size:15px; margin-bottom:10px; font-family:inherit
+}
+input[type=email]:focus{outline:none; border-color:var(--volt)}
+.skip{display:block; width:100%; text-align:center; margin-top:12px; font-size:13px; color:var(--mut2); text-decoration:underline; text-underline-offset:3px}
+.err{font-size:12.5px; color:#ff8a7a; margin-bottom:10px; display:none}
+.err.on{display:block}
+
+.dump{
+  background:var(--bg); border:1px solid var(--line); border-radius:var(--r);
+  padding:14px; font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  font-size:12px; line-height:1.65; color:#cdd2db;
+  max-height:280px; overflow-y:auto; margin-bottom:12px;
+}
+.dump span{display:block; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:anywhere}
+.dump .fade{position:sticky; bottom:-14px; height:38px; margin:-38px 0 0; pointer-events:none;
+  background:linear-gradient(to bottom, rgba(13,14,18,0), var(--bg) 78%)}
+.textlink{display:block; width:100%; text-align:center; padding:12px; font-size:13.5px; color:var(--mut); text-decoration:underline; text-underline-offset:3px}
+
+.offer{
+  margin-top:18px; background:linear-gradient(170deg,#191c24,#14161d);
+  border:1px solid var(--line2); border-radius:18px; padding:20px
+}
+.offer h3{font-size:19px; font-weight:700; margin-bottom:11px; letter-spacing:-.025em}
+.offer p{color:#c3c9d3; font-size:14.5px; line-height:1.6; margin-bottom:11px}
+.offer p:last-of-type{margin-bottom:17px}
+.compliance{margin-top:20px; font-size:11.5px; color:var(--mut2); line-height:1.6}
+
+@media (max-width:374px){
+  .wrap{padding:16px 11px 0}
+  .h1{font-size:27px}
+  .bubble{font-size:14px; max-width:87%}
+  .thread{padding:12px 10px 4px}
+  .btn{font-size:14.5px; padding:14px}
+  .crumb{font-size:10.5px; padding:4px 8px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
+  .screen.on{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <div class="mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#0d0e12"/></svg></div>
+    <b>Volt</b><span>· Reactivation Sequence Builder</span>
+  </div>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ============================ CONFIG START ============================ */
+
+var CONFIG = {
+  bookingUrl:   'https://calendly.com/caydenrealchern/30min',
+  bookingLabel: 'Book a free 30 minute setup call',
+  offerHeading: 'The sequence is the easy half',
+  offerBody: [
+    "You've got the sequence. Running it by hand across a few hundred old leads is the part nobody does.",
+    "I'll set it up to run automatically for you, free. I'm building case studies at the moment, so I want the result more than the fee."
+  ],
+  quietOffer: 'Want this running automatically across your whole old-lead list? I set it up free while I build case studies — ',
+  quietOfferLink: 'book a 30 minute call',
+
+  webhookUrl: '',           /* e.g. 'https://hooks.zapier.com/...' — blank just skips the POST */
+  gateEnabled: true,
+  typingMs: 600,
+  currencyDefault: null,    /* null = detect from navigator.language */
+
+  sender:   '[your name]',
+  business: '[your business]',
+
+  days: { m1:0, m2c:3, m3:7, m4:14 },
+
+  compliance: 'These messages assume the person already asked you for a price. Opt-out wording and the rules where you operate are your responsibility, not this tool’s.'
+};
+
+/* ============================ COPY LIBRARY ============================
+   Layered, not combinatorial. 8 vocabulary packs + 4 tone templates +
+   3 openers = 15 pieces of writing, assembled at runtime.
+   Register: q = quick (small jobs, casual) | c = considered (large jobs).
+   ==================================================================== */
+
+var COPY = {};
+
+COPY.industries = {
+
+  roofing: {
+    label:'Roofing', who:'Roofer',
+    m1ref:{ q:'the gutters at yours',           c:'the roof' },
+    m1q:  { q:'did you get them cleared in the end?', c:'did it ever go ahead?' },
+    m2a:  { q:"i’m out your way thursday morning or friday after 2. either work? takes about an hour.",
+            c:"i can come thursday morning or monday afternoon, get up and actually look rather than guess from the ground. 45 minutes, no charge." },
+    m2b:  { q:'if they start overflowing in the autumn, you’ve got my number.',
+            c:'if it ever starts letting water in, message me and i’ll come and look, whether you use us or not.' },
+    m2c:  { q:'no rush — are the gutters still on the list, or shall i leave it?',
+            c:'know you’re busy. is the roof still something you’re planning, or has it been dealt with?' },
+    m3:   { q:'worth knowing — once the leaves drop everyone rings the same fortnight and i’m booked solid till november. i’ve still got a couple of mornings before that.',
+            c:'we’ve got scaffold going up two streets from you next month. doing yours while it’s already local takes the access cost down a long way, and on a roof that’s usually the biggest line on the quote.' },
+    m4:   { q:'taking the gutters off my list. if it rains through this winter, just text.',
+            c:'you’ve clearly got it covered. if the roof ever causes you grief, message me and i’ll come and look at it, quote or no quote.' },
+    yes:  { q:'yeah, they still need doing',    c:'yeah — never got it sorted actually' },
+    no:   { q:'got a mate to do them, cheers',  c:'we went with another firm in the end' }
+  },
+
+  solar: {
+    label:'Solar', who:'Solar installer',
+    m1ref:{ q:'a service on the panels',        c:'putting solar on the house' },
+    m1q:  { q:'did you get that booked?',       c:'did you end up going ahead with anyone?' },
+    m2a:  { q:"i can come tuesday morning or thursday afternoon, check the output and clean them while i’m up there. hour, maybe less.",
+            c:"easiest is 20 minutes on the phone first — tuesday 10 or thursday 4? i’ll pull your roof up on the map and we can talk real numbers before anyone comes out." },
+    m2b:  { q:'if the generation drops off, give me a shout.',
+            c:'if you ever want a second opinion on someone else’s design, send it over — happy to look at it for nothing.' },
+    m2c:  { q:'quick one — do you still want the panels looking at?',
+            c:'just checking — is solar still on the cards, or has that idea been shelved?' },
+    m3:   { q:'panels lose a real chunk of output once they’re dirty, and it always reads worst at the end of summer. i’m doing a run of them round your way next week.',
+            c:'one thing has changed — grid connection approvals are running about six weeks now. if you want a system actually generating through next summer, the paperwork realistically needs starting this side of christmas.' },
+    m4:   { q:'if the app ever shows the generation dropping off, text me.',
+            c:'if you ever want someone to sanity check a solar quote before you sign it, send it over. i’ll read it for nothing.' },
+    yes:  { q:'yeah, output’s been rubbish',  c:'yeah, we still haven’t done anything about it' },
+    no:   { q:'not bothering with it now',      c:'we decided against it, payback was too long' }
+  },
+
+  hvac: {
+    label:'HVAC & heating', who:'Heating engineer',
+    m1ref:{ q:'a service on the boiler',        c:'replacing the heating' },
+    m1q:  { q:'did that ever get booked in?',   c:'did you get it done in the end?' },
+    m2a:  { q:"thursday morning or friday lunchtime? about an hour, and you’ll have the certificate the same day.",
+            c:"i’d want to see the place before giving you a proper figure. thursday morning or monday afternoon? half an hour, and you’ll have it in writing that evening." },
+    m2b:  { q:'if it starts making noises this winter, give me a ring.',
+            c:'if you want a second pair of eyes when it’s commissioned, i’m about — no charge for that.' },
+    m2c:  { q:'still after that service, or has it been done?',
+            c:'is the heating job still happening, or shall i close it off?' },
+    m3:   { q:'heads up — first proper cold week and my phone doesn’t stop, and everything after that is a fortnight’s wait. i’ve got space this month if you want it out of the way.',
+            c:'worth knowing: parts lead times go out to three or four weeks once the cold sets in, and nobody wants to be sat without heat waiting on a delivery. if it’s happening this year, october is the last comfortable month to start.' },
+    m4:   { q:'taking you off my list. if the boiler plays up, you’ve got me.',
+            c:'if you’re ever without heat and stuck, ring me anyway. i’ll tell you what i’d do even if you don’t use us.' },
+    yes:  { q:'yeah, book me in',               c:'yeah, we still need it doing' },
+    no:   { q:'had it done already, cheers',    c:'we’re leaving it another year' }
+  },
+
+  dental: {
+    label:'Dental & aesthetics', who:'Practice',
+    m1ref:{ q:'a hygienist appointment',        c:'the treatment plan' },
+    m1q:  { q:'did you ever get that booked?',  c:'did you decide to go ahead anywhere in the end?' },
+    m2a:  { q:"we’ve got tuesday 9:40 or thursday 3:20 — either suit? half an hour and you’re out.",
+            c:"we’ve still got your plan on file so nothing needs redoing. tuesday 10 or thursday 4:30 for a 20 minute consult? no charge, and you’ll leave knowing the actual cost." },
+    m2b:  { q:'we’ll take the reminder off. door’s open whenever.',
+            c:'we’ll stop the follow-ups. your plan stays on file if you ever want to pick it back up.' },
+    m2c:  { q:'want us to hold you a slot, or leave it for now?',
+            c:'is the treatment still something you’re considering, or shall we close the file?' },
+    m3:   { q:'worth mentioning — we’re full from december for obvious reasons and hygienist slots always go first. november still has room.',
+            c:'one thing has changed: the lab we use is putting its prices up in january, and we’re holding the figure on your plan until then. that isn’t a sales line, it’s just the last date it stands.' },
+    m4:   { q:'if you want that appointment at any point, just reply and we’ll find you a slot.',
+            c:'no more follow-ups from us. your plan stays on file, and if you want to talk it through in a year it’ll still be there.' },
+    yes:  { q:'yes please, that’d be good',   c:'yes — i’m still interested' },
+    no:   { q:'i’ve registered elsewhere, thanks', c:'i’ve decided not to go ahead' }
+  },
+
+  fitness: {
+    label:'Fitness', who:'Coach',
+    m1ref:{ q:'coming in for a session',        c:'the coaching block' },
+    m1q:  { q:'did you ever make it down?',     c:'did you end up starting with anyone?' },
+    m2a:  { q:"tuesday 6pm or saturday 9am — which suits? first one’s on us, just bring trainers.",
+            c:"let’s do 20 minutes on the phone first so i know what you’re actually training for — tuesday 7pm or thursday 1pm? i’ll put a rough plan together off the back of it." },
+    m2b:  { q:'door’s open whenever you fancy it.',
+            c:'good luck with it, genuinely. if you ever want a second opinion on a programme, message me.' },
+    m2c:  { q:'still fancy giving it a go, or is now not the time?',
+            c:'is training still something you want to sort this year, or shall i leave it?' },
+    m3:   { q:'new intake starts on the 4th. it’s the one week in the month where everyone walking in is a beginner, which is usually the bit people dread.',
+            c:'we start a new small group block on the 4th — six people, twelve weeks, and it doesn’t run again until january. january is the worst month to start anything, because everyone else is.' },
+    m4:   { q:'if you ever want to come in, just turn up. no need to book.',
+            c:'most people i coach came back months after the first conversation, so this isn’t a door closing. it’s just me stopping messaging.' },
+    yes:  { q:'go on then',                     c:'yeah, i’m still up for it' },
+    no:   { q:'joined somewhere else',          c:'can’t commit to it right now' }
+  },
+
+  home: {
+    label:'Home services', who:'Trade',
+    m1ref:{ q:'the work at yours',              c:'the job at your place' },
+    m1q:  { q:'did you get it done in the end?', c:'did that ever go ahead?' },
+    m2a:  { q:"i’m in your area thursday morning or friday after lunch — either work? i’ll bring everything with me.",
+            c:"i’d want to come and look again before i commit to a price, things move on. thursday morning or monday afternoon? half an hour, and i’ll price it properly off the back of it." },
+    m2b:  { q:'if you need anything doing later on, you’ve got my number.',
+            c:'if whoever’s doing it lets you down halfway, i’d still come and finish it. no awkwardness.' },
+    m2c:  { q:'still want the work doing, or has it been sorted?',
+            c:'is the job still on, or shall i take it off the list?' },
+    m3:   { q:'i’m working two streets from you the week after next. if i do yours in the same run there’s no travel on it, which knocks a bit off.',
+            c:'we’re already booked on your road for a fortnight from the 12th. doing yours inside that run means the setup and travel is shared — that’s the only reason i can still hold the original price.' },
+    m4:   { q:'taking it off my list. text if you ever want it doing.',
+            c:'if you want the quote again in six months, just ask and i’ll come and redo it properly rather than dust off an old number.' },
+    yes:  { q:'yes please, still needs doing',  c:'yeah, we never got round to it' },
+    no:   { q:'sorted it ourselves in the end', c:'went with another quote, sorry' }
+  },
+
+  auto: {
+    label:'Auto', who:'Garage',
+    m1ref:{ q:'a service on the car',           c:'the bodywork' },
+    m1q:  { q:'did you get it booked in?',      c:'did you ever get it sorted?' },
+    m2a:  { q:"thursday or friday — drop it in for 8 and it’ll be ready by 4. courtesy car if you need one.",
+            c:"bring it down thursday morning or monday and i’ll put it on the ramp properly, go through it with you and price it there and then. 40 minutes and it costs nothing." },
+    m2b:  { q:'if it starts playing up, bring it in.',
+            c:'if the other garage finds something you’re not sure about, send me a photo and i’ll tell you whether it’s real.' },
+    m2c:  { q:'still want the car booked in, or leave it?',
+            c:'is the car still needing doing, or has it been dealt with?' },
+    m3:   { q:'everyone books the fortnight before their mot runs out and the diary goes solid. i’ve still got mornings this month.',
+            c:'one thing: the longer bodywork sits the further the edges go, and once it’s properly into the metal the job roughly doubles. that’s not a sales line, it’s just what a winter does to it.' },
+    m4:   { q:'taking you off my list. if it needs anything, you know where we are.',
+            c:'if you ever want a second opinion on somebody else’s quote for it, send it over. i’ll look at it for nothing.' },
+    yes:  { q:'yeah, book it in',               c:'yeah, it’s still not been done' },
+    no:   { q:'sold the car',                   c:'part-exchanged it in the end' }
+  },
+
+  other: {
+    label:'Other', who:'Business',
+    m1ref:{ q:'the job',                        c:'the work' },
+    m1q:  { q:'did it ever get done?',          c:'did you end up going ahead with anyone?' },
+    m2a:  { q:"thursday morning or friday afternoon — which is easier?",
+            c:"can i grab 20 minutes on the phone, tuesday 10 or thursday 4? far easier to go through properly than over text." },
+    m2b:  { q:'you know where i am, whenever.',
+            c:'if it ever comes back round, i’m here — and i’ll pick it up from where we left off.' },
+    m2c:  { q:'still want it doing, or shall i leave it?',
+            c:'is it still something you’re planning, or shall i close it off?' },
+    m3:   { q:'my diary tends to fill about three weeks out. i’ve got room this month and i’d rather it went to someone who already asked.',
+            c:'your quote was priced on last year’s costs and i’ve held it so far. i’d rather do the job at the old figure than requote it, so if it’s still live it’s worth saying now.' },
+    m4:   { q:'taking it off the list. text if it comes back round.',
+            c:'if it comes back round in six months, message me and i’ll pick it straight back up.' },
+    yes:  { q:'yeah, still want it',            c:'yeah, it’s still live' },
+    no:   { q:'sorted now thanks',              c:'we went a different way, sorry' }
+  }
+};
+
+/* ---- tone templates, one per average job value band ---- */
+COPY.tones = {
+  b1: { label:'Under {c}500',        register:'q', reason:false,
+        m1tail:'',
+        m2aLead:'sound.', m2aTail:'',
+        m2bLead:'no worries.',
+        m2cTail:'',
+        m3Tail:'',
+        m4Lead:'last one from me.' },
+
+  b2: { label:'{c}500–{c}2k',    register:'q', reason:false,
+        m1tail:' no rush either way.',
+        m2aLead:'nice one, thanks for coming back to me.', m2aTail:'',
+        m2bLead:'no problem at all.',
+        m2cTail:'',
+        m3Tail:' figured i’d say rather than not.',
+        m4Lead:'last one from me, promise.' },
+
+  b3: { label:'{c}2k–{c}10k',    register:'c', reason:true,
+        m1tail:' a no is a completely fine answer.',
+        m2aLead:'good to hear.', m2aTail:'',
+        m2bLead:'understood, and thanks for telling me straight.',
+        m2cTail:' either answer is fine.',
+        m3Tail:' thought it was worth telling you rather than sitting on it.',
+        m4Lead:'i’ll stop chasing you now.' },
+
+  b4: { label:'{c}10k+',              register:'c', reason:true,
+        m1tail:' happy either way — i’d rather know than keep wondering.',
+        m2aLead:'that’s good to hear, thanks for replying.',
+        m2aTail:' i’ll send the figures over beforehand so you’re not going in cold.',
+        m2bLead:'completely understood — thanks for taking the time to reply.',
+        m2cTail:' no pressure.',
+        m3Tail:' not rushing you — on a job this size the timing matters more than the decision.',
+        m4Lead:'this is the last message, then i’ll leave you alone.' }
+};
+
+/* ---- openers, one per how-long-cold band ---- */
+COPY.openers = {
+  fresh: {
+    label:'Under 3 months',
+    pre: { q:'hi, it’s {s} from {b}. you got in touch about', c:'hi, it’s {s} at {b} — we spoke a few weeks ago about' },
+    post:{ q:' a few weeks back.', c:'.' },
+    reason:'didn’t want it to go quiet without asking.'
+  },
+  mid: {
+    label:'3–12 months',
+    pre: { q:'hi, it’s {s} from {b}. we priced up', c:'hi, it’s {s} at {b}. earlier this year we put a price together for' },
+    post:{ q:' for you earlier in the year.', c:'.' },
+    reason:'i’m going back through this year’s quotes that never got an answer.'
+  },
+  old: {
+    label:'Over a year',
+    pre: { q:'hi, it’s {s} from {b}. bit out of the blue — we priced up', c:'hi, it’s {s} at {b}. out of the blue, i know: we quoted you for' },
+    post:{ q:' for you a while back.', c:' over a year ago.' },
+    reason:'i’m going back through old enquiries that never got a straight answer.'
+  }
+};
+
+/* ---- the teaching layer: why each message is shaped this way ---- */
+COPY.notes = {
+  m1: 'One question, no pitch. You are restarting a conversation, not selling — the moment there is an offer in it, it reads as marketing and gets deleted.',
+  m1fresh: 'They still remember you, so naming the enquiry is enough. Explaining yourself at length is what makes a recent follow-up feel odd.',
+  m1mid:  'Six months of silence is not a no, it is a forgotten tab. Say when you quoted so they can place you without having to scroll back.',
+  m1old:  'Name the gap out loud. Writing as though no time has passed is the single thing that makes an old-lead message feel automated.',
+  m2a: 'Two named times, not "when suits?". An open question is a task they have to do; a choice of two is a yes or a no.',
+  m2b: 'Take the no cleanly. Arguing costs you the referral and the next job, and a parked lead is worth far more than an annoyed one.',
+  m2c: 'Assume it was seen and forgotten, not ignored. It is shorter than message one on purpose — a repeat of the first message reads like a bot.',
+  m3: 'A real reason, tied to your trade and your diary. Invented deadlines get spotted immediately; a genuine change in cost or availability does not.',
+  m4: 'The highest reply rate in the sequence, and the one nobody sends. "I will stop" removes the pressure they were avoiding, so they finally answer.'
+};
+
+COPY.endings = {
+  won:{ badge:'Booked', title:'That is the whole point of the sequence.',
+        body:'Most reactivation campaigns die before this screen because nobody wrote message 2a. They get a reply, then answer with "great, when suits you?" and hand the work back to the lead.\n\nOffering two named times is the entire difference between a reply and a booking.' },
+  parked:{ badge:'Parked', title:'A no is a result. Silence is not.',
+        body:'This is the branch people skip, and skipping it is expensive. Owners either argue with the no or vanish mid-conversation, and both close the door on the job in eighteen months.\n\nA clean exit keeps you as the person they call next time, and it takes one message.' },
+  cleaned:{ badge:'List cleaned', title:'Four messages, no reply, and you have still gained.',
+        body:'You now know that lead is genuinely cold, which you did not know this morning. That is worth something on its own — you stop paying attention to a name that was never coming back.\n\nAnd message 4 is the one that most often gets an answer, which is exactly why it is the one owners are most reluctant to send.' }
+};
+
+/* ============================ ASSEMBLY ============================ */
+
+function joinParts(parts){
+  return parts.filter(function(x){ return x && String(x).trim(); })
+              .map(function(x){ return String(x).trim(); })
+              .join(' ');
+}
+
+function buildSequence(industryKey, valueKey, coldKey){
+  var I = COPY.industries[industryKey],
+      T = COPY.tones[valueKey],
+      O = COPY.openers[coldKey],
+      r = T.register;
+
+  var head = (O.pre[r] + ' ' + I.m1ref[r] + O.post[r])
+               .replace('{s}', CONFIG.sender)
+               .replace('{b}', CONFIG.business);
+
+  return {
+    m1:  joinParts([ head, T.reason ? O.reason : '', I.m1q[r], T.m1tail ]),
+    m2a: joinParts([ T.m2aLead, I.m2a[r], T.m2aTail ]),
+    m2b: joinParts([ T.m2bLead, I.m2b[r] ]),
+    m2c: joinParts([ I.m2c[r], T.m2cTail ]),
+    m3:  joinParts([ I.m3[r], T.m3Tail ]),
+    m4:  joinParts([ T.m4Lead, I.m4[r] ])
+  };
+}
+
+/* ============================= CONFIG END ============================= */
+
+/* ============================ STATE MACHINE ============================
+   Two decision points (after m1, after m2c), three terminal states.      */
+
+var GRAPH = {
+  m1:      { k:'send', msg:'m1', day:'m1', next:'d1' },
+  d1:      { k:'choice', prompt:'What does the lead do?', opts:[
+               { kind:'yes',  next:'ry1' },
+               { kind:'no',   next:'rn1' },
+               { kind:'none', next:'s1', label:'They don’t reply at all', tag:'The branch most campaigns die in' } ] },
+  ry1:     { k:'reply', kind:'yes', next:'m2a' },
+  rn1:     { k:'reply', kind:'no',  next:'m2b' },
+  s1:      { k:'silence', text:'three days pass · nothing', next:'m2c' },
+
+  m2a:     { k:'send', msg:'m2a', day:'reply', next:'won' },
+  m2b:     { k:'send', msg:'m2b', day:'reply', next:'parked' },
+  m2c:     { k:'send', msg:'m2c', day:'m2c',   next:'d2' },
+
+  d2:      { k:'choice', prompt:'And this time?', opts:[
+               { kind:'yes',  next:'ry2' },
+               { kind:'none', next:'s2', label:'Still nothing', tag:'Most people stop here. Two messages left.' } ] },
+  ry2:     { k:'reply', kind:'yes', next:'m2a' },
+  s2:      { k:'silence', text:'four more days · still nothing', next:'m3' },
+
+  m3:      { k:'send', msg:'m3', day:'m3', next:'s3' },
+  s3:      { k:'silence', text:'a week goes by · still nothing', next:'m4' },
+  m4:      { k:'send', msg:'m4', day:'m4', next:'cleaned' },
+
+  won:     { k:'end', outcome:'won' },
+  parked:  { k:'end', outcome:'parked' },
+  cleaned: { k:'end', outcome:'cleaned' }
+};
+
+var DAY_LABEL = { m1:'Day 0', m2c:'Day 3', m3:'Day 7', m4:'Day 14', reply:'Within the hour' };
+var MSG_TITLE = { m1:'The re-open', m2a:'Book the slot', m2b:'The graceful exit',
+                  m2c:'The nudge', m3:'The reason to act now', m4:'The close-out' };
+
+var S = {
+  screen:'intro',
+  industry:'', value:'', cold:'',
+  cur:'£',
+  seq:null,
+  trail:['m1'],
+  history:[],
+  animate:'m1',
+  outcome:null,
+  gated:true,
+  copied:false
+};
+
+/* ============================ HELPERS ============================ */
+
+var app = document.getElementById('app');
+var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function esc(t){
+  return String(t).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function node(id){ return GRAPH[id]; }
+function last(){ return S.trail[S.trail.length - 1]; }
+function cur(){ return node(last()); }
+function bandLabel(k){ return COPY.tones[k].label.replace(/\{c\}/g, S.cur); }
+function detectCur(){
+  if (CONFIG.currencyDefault) return CONFIG.currencyDefault;
+  var l = (navigator.language || 'en-GB');
+  return /^en-GB|^cy|^gd/i.test(l) ? '£' : '$';
+}
+
+/* push a node, then keep pushing while the node just added is a
+   non-interactive beat (a lead reply, or a stretch of silence) */
+function pushChain(id){
+  S.trail.push(id);
+  var n = node(id);
+  while (n && (n.k === 'reply' || n.k === 'silence')) {
+    S.trail.push(n.next);
+    n = node(n.next);
+  }
+  var tail = cur();
+  S.animate = (tail && tail.k === 'send') ? last() : null;
+}
+function go(id){ S.history.push(S.trail.slice()); pushChain(id); render(); }
+function back(){
+  if (!S.history.length) return;
+  S.trail = S.history.pop();
+  S.animate = null;
+  render();
+}
+
+/* ============================ SCREENS ============================ */
+
+function screenIntro(){
+  var inds = Object.keys(COPY.industries).map(function(k){
+    return '<option value="'+k+'"'+(S.industry===k?' selected':'')+'>'+esc(COPY.industries[k].label)+'</option>';
+  }).join('');
+  var vals = Object.keys(COPY.tones).map(function(k){
+    return '<option value="'+k+'"'+(S.value===k?' selected':'')+'>'+esc(bandLabel(k))+'</option>';
+  }).join('');
+  var colds = Object.keys(COPY.openers).map(function(k){
+    return '<option value="'+k+'"'+(S.cold===k?' selected':'')+'>'+esc(COPY.openers[k].label)+'</option>';
+  }).join('');
+  var ready = S.industry && S.value && S.cold;
+
+  return '<div class="screen on">'
+    + '<div class="eyebrow">Free tool · no signup</div>'
+    + '<h1 class="h1">Your old leads are<br>not dead. They are<br><em>unanswered.</em></h1>'
+    + '<p class="sub">Answer three questions and walk through the five-message sequence that reopens them — including what to send when they go quiet, which is where almost every campaign falls over.</p>'
+    + '<div class="field"><label for="f-ind">What do you do?</label><div class="selwrap">'
+      + '<select id="f-ind" class="'+(S.industry?'':'empty')+'"><option value="" disabled'+(S.industry?'':' selected')+'>Choose your industry</option>'+inds+'</select></div></div>'
+    + '<div class="field"><label for="f-val">Average job value</label><div class="selwrap">'
+      + '<select id="f-val" class="'+(S.value?'':'empty')+'"><option value="" disabled'+(S.value?'':' selected')+'>Choose a range</option>'+vals+'</select></div></div>'
+    + '<div class="field"><label for="f-cold">How long have these leads been cold?</label><div class="selwrap">'
+      + '<select id="f-cold" class="'+(S.cold?'':'empty')+'"><option value="" disabled'+(S.cold?'':' selected')+'>Choose a timeframe</option>'+colds+'</select></div></div>'
+    + '<div class="curr"><span>Currency</span><div class="toggle">'
+      + '<button id="cur-gbp" aria-pressed="'+(S.cur==='£')+'">£</button>'
+      + '<button id="cur-usd" aria-pressed="'+(S.cur==='$')+'">$</button></div></div>'
+    + '<button class="btn" id="go"'+(ready?'':' disabled')+'>'+(ready?'Build my sequence':'Answer all three to continue')+'</button>'
+    + '<p class="foot">Nothing is sent, nothing is stored, and you do not need an account. The whole walkthrough is free.</p>'
+    + '</div>';
+}
+
+function threadHtml(){
+  var out = '', lastDay = null;
+  for (var i = 0; i < S.trail.length; i++){
+    var id = S.trail[i], n = node(id);
+    if (!n) continue;
+    if (n.k === 'send'){
+      var dl = DAY_LABEL[n.day];
+      if (dl !== lastDay){ out += '<div class="daystamp">'+esc(dl)+'</div>'; lastDay = dl; }
+      if (id === S.animate && !reduced){
+        out += '<div class="typing" id="typing"><i></i><i></i><i></i></div>';
+      } else {
+        out += '<div class="bubble out">'+esc(S.seq[n.msg])+'</div>';
+      }
+    } else if (n.k === 'reply'){
+      var I = COPY.industries[S.industry], r = COPY.tones[S.value].register;
+      out += '<div class="bubble in">'+esc(I[n.kind][r])+'</div>';
+    } else if (n.k === 'silence'){
+      out += '<div class="bubble silent">'+esc(n.text)+'</div>';
+    }
+  }
+  return out;
+}
+
+function railHtml(){
+  var sends = 0, crumbs = '';
+  for (var i = 0; i < S.trail.length; i++){
+    var id = S.trail[i], n = node(id);
+    if (!n) continue;
+    var isLast = (i === S.trail.length - 1);
+    if (n.k === 'send'){
+      sends++;
+      crumbs += '<span class="crumb'+(isLast?' on':'')+'">'+esc(DAY_LABEL[n.day])+'</span>';
+    } else if (n.k === 'reply'){
+      crumbs += '<span class="crumb br">'+(n.kind === 'yes' ? 'interested' : 'not interested')+'</span>';
+    } else if (n.k === 'silence'){
+      crumbs += '<span class="crumb br">no reply</span>';
+    }
+  }
+  var bars = '';
+  for (var j = 1; j <= 4; j++){
+    bars += '<i class="'+(j < sends ? 'done' : j === sends ? 'now' : '')+'"></i>';
+  }
+  return '<div class="rail">'+bars+'</div><div class="crumbs" id="crumbs">'+crumbs+'</div>';
+}
+
+function screenWalk(){
+  var n = cur(), I = COPY.industries[S.industry], r = COPY.tones[S.value].register;
+  var body = '<div class="screen on">' + railHtml()
+    + '<div class="phone">'
+      + '<div class="phone-top"><div class="av">'+esc(I.label.charAt(0))+'</div>'
+        + '<div><b>Your old lead</b><small>'+esc(I.who)+' · '+esc(bandLabel(S.value))+'</small></div></div>'
+      + '<div class="thread" id="thread">'+threadHtml()+'</div>'
+    + '</div>';
+
+  if (n.k === 'send'){
+    var noteKey = (n.msg === 'm1') ? ('m1' + S.cold) : n.msg;
+    var noteText = COPY.notes[noteKey] || COPY.notes[n.msg];
+    body += '<div class="note" id="note"><b>'+esc(MSG_TITLE[n.msg])+' · why this works</b><p>'+esc(noteText)+'</p></div>'
+      + '<div class="nav"><button class="back" id="back" aria-label="Back"'+(S.history.length?'':' disabled')+'>'
+      + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<button class="btn" id="next" data-next="'+n.next+'">'+(node(n.next).k==='end'?'See the outcome':'Continue')+'</button></div>';
+  }
+
+  if (n.k === 'choice'){
+    var prevSend = null;
+    for (var pi = S.trail.length - 1; pi >= 0; pi--){
+      var pn = node(S.trail[pi]);
+      if (pn && pn.k === 'send'){ prevSend = pn; break; }
+    }
+    if (prevSend){
+      var pk = (prevSend.msg === 'm1') ? ('m1' + S.cold) : prevSend.msg;
+      body += '<div class="note"><b>'+esc(MSG_TITLE[prevSend.msg])+' · why this works</b><p>'
+            + esc(COPY.notes[pk] || COPY.notes[prevSend.msg])+'</p></div>';
+    }
+    var o = '';
+    for (var i = 0; i < n.opts.length; i++){
+      var op = n.opts[i];
+      var label = op.label || I[op.kind][r];
+      var quiet = op.kind === 'none';
+      o += '<button class="reply'+(quiet?' quiet':'')+'" data-go="'+op.next+'">'+esc(label)
+         + (op.tag ? '<span class="tag">'+esc(op.tag)+'</span>' : '') + '</button>';
+    }
+    body += '<div class="choices"><h4>'+esc(n.prompt)+'</h4>'+o+'</div>'
+      + '<div class="nav"><button class="back" id="back" aria-label="Back"'+(S.history.length?'':' disabled')+'>'
+      + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>';
+  }
+
+  return body + '<p class="compliance">'+esc(CONFIG.compliance)+'</p></div>';
+}
+
+function offerLineHtml(){
+  return '<p class="quietoffer">'+esc(CONFIG.quietOffer)
+    + '<a href="'+esc(CONFIG.bookingUrl)+'" target="_blank" rel="noopener">'+esc(CONFIG.quietOfferLink)+'</a>.</p>';
+}
+
+function screenEnd(){
+  var e = COPY.endings[S.outcome];
+  return '<div class="screen on">' + railHtml()
+    + '<div class="end">'
+      + '<span class="badge '+S.outcome+'">'+esc(e.badge)+'</span>'
+      + '<h2>'+esc(e.title)+'</h2>'
+      + '<div class="body">'+esc(e.body).replace(/\n\n/g,'<br><br>')+'</div>'
+      + '<button class="btn" id="tocopy">Get all five messages as text</button>'
+      + '<div class="nav" style="margin-top:9px">'
+        + '<button class="btn ghost sm" id="back">Back a step</button>'
+        + '<button class="btn ghost sm" id="restart">Try another branch</button></div>'
+      + offerLineHtml()
+    + '</div></div>';
+}
+
+function screenGate(){
+  return '<div class="screen on"><div class="card">'
+    + '<h2>Where should I send it?</h2>'
+    + '<p class="lede">All five messages, written for '+esc(COPY.industries[S.industry].label.toLowerCase())
+      + ', with the send timings — as plain text you can paste anywhere.</p>'
+    + '<div class="err" id="err">That does not look like an email address.</div>'
+    + '<input type="email" id="email" placeholder="you@yourbusiness.co.uk" autocomplete="email" inputmode="email">'
+    + '<button class="btn" id="send">Send it over</button>'
+    + '<button class="skip" id="skip">No thanks — just show me the messages</button>'
+    + '</div></div>';
+}
+
+function sequenceText(){
+  var lines = [
+    'REACTIVATION SEQUENCE',
+    COPY.industries[S.industry].label + ' · ' + bandLabel(S.value) + ' average job · cold for ' + COPY.openers[S.cold].label.toLowerCase(),
+    'Replace ' + CONFIG.sender + ' and ' + CONFIG.business + ' before sending.',
+    ''
+  ];
+  var order = [
+    ['m1',  'MESSAGE 1 — ' + MSG_TITLE.m1  + ' — ' + DAY_LABEL.m1],
+    ['m2a', 'MESSAGE 2A — ' + MSG_TITLE.m2a + ' — send the moment they reply interested'],
+    ['m2b', 'MESSAGE 2B — ' + MSG_TITLE.m2b + ' — send if they say no, then stop'],
+    ['m2c', 'MESSAGE 2C — ' + MSG_TITLE.m2c + ' — ' + DAY_LABEL.m2c + ', only if no reply'],
+    ['m3',  'MESSAGE 3 — '  + MSG_TITLE.m3  + ' — ' + DAY_LABEL.m3  + ', only if still no reply'],
+    ['m4',  'MESSAGE 4 — '  + MSG_TITLE.m4  + ' — ' + DAY_LABEL.m4  + ', only if still no reply']
+  ];
+  for (var i = 0; i < order.length; i++){
+    lines.push(order[i][1]); lines.push(S.seq[order[i][0]]); lines.push('');
+  }
+  lines.push('---');
+  lines.push('If they reply to any message, stop the sequence and send message 2A.');
+  lines.push('If they say no, send message 2B and stop. A no is a result.');
+  lines.push('Opt-out wording and local rules are your responsibility.');
+  lines.push('');
+  lines.push('Built with the Reactivation Sequence Builder · ' + CONFIG.bookingUrl);
+  return lines.join('\n');
+}
+
+function screenCopy(){
+  return '<div class="screen on"><div class="card">'
+    + '<h2>Your sequence</h2>'
+    + '<p class="lede">All five messages with their timings. Paste it wherever you send from.</p>'
+    + '<div class="dump" id="out"><span>'+esc(sequenceText())+'</span><div class="fade"></div></div>'
+    + (S.copied
+        ? '<button class="textlink" id="copy">Copied. Copy again</button>'
+        : '<button class="btn alt" id="copy">Copy the whole sequence</button>')
+    + '</div>'
+    + '<div class="offer">'
+      + '<h3>'+esc(CONFIG.offerHeading)+'</h3>'
+      + CONFIG.offerBody.map(function(p){ return '<p>'+esc(p)+'</p>'; }).join('')
+      + '<a class="btn" href="'+esc(CONFIG.bookingUrl)+'" target="_blank" rel="noopener" id="book">'+esc(CONFIG.bookingLabel)+'</a>'
+    + '</div>'
+    + '<button class="textlink" id="restart">Start again with different answers</button>'
+    + '<p class="compliance">'+esc(CONFIG.compliance)+'</p>'
+    + '</div>';
+}
+
+/* ============================ RENDER + WIRING ============================ */
+
+function on(id, ev, fn){ var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
+
+function render(){
+  var n = cur();
+  if (S.screen === 'walk' && n && n.k === 'end'){ S.outcome = n.outcome; S.screen = 'end'; }
+
+  if      (S.screen === 'intro') app.innerHTML = screenIntro();
+  else if (S.screen === 'walk')  app.innerHTML = screenWalk();
+  else if (S.screen === 'end')   app.innerHTML = screenEnd();
+  else if (S.screen === 'gate')  app.innerHTML = screenGate();
+  else if (S.screen === 'copy')  app.innerHTML = screenCopy();
+
+  wire();
+
+  var cr = document.getElementById('crumbs');
+  if (cr) cr.scrollLeft = cr.scrollWidth;
+  var th = document.getElementById('thread');
+  if (th) th.scrollTop = th.scrollHeight;
+
+  /* land the newest message after a brief typing indicator */
+  var typing = document.getElementById('typing');
+  if (typing){
+    var beat = node(S.animate);
+    var done = function(){
+      var b = document.createElement('div');
+      b.className = 'bubble out';
+      b.textContent = S.seq[beat.msg];
+      if (typing.parentNode) typing.parentNode.replaceChild(b, typing);
+      S.animate = null;
+      var t = document.getElementById('thread');
+      if (t) t.scrollTop = t.scrollHeight;
+    };
+    if (reduced) done(); else setTimeout(done, CONFIG.typingMs);
+  }
+}
+
+function wire(){
+  /* ---- intro ---- */
+  on('f-ind','change',  function(e){ S.industry = e.target.value; render(); });
+  on('f-val','change',  function(e){ S.value = e.target.value; render(); });
+  on('f-cold','change', function(e){ S.cold = e.target.value; render(); });
+  on('cur-gbp','click', function(){ S.cur = '£'; render(); });
+  on('cur-usd','click', function(){ S.cur = '$'; render(); });
+  on('go','click', function(){
+    if (!(S.industry && S.value && S.cold)) return;
+    S.seq = buildSequence(S.industry, S.value, S.cold);
+    S.trail = ['m1']; S.history = []; S.animate = 'm1'; S.screen = 'walk';
+    render();
+  });
+
+  /* ---- walkthrough ---- */
+  on('next','click', function(e){ go(e.currentTarget.getAttribute('data-next')); });
+  var reps = document.querySelectorAll('[data-go]');
+  for (var i = 0; i < reps.length; i++){
+    reps[i].addEventListener('click', function(e){ go(e.currentTarget.getAttribute('data-go')); });
+  }
+  on('back','click', function(){
+    if (S.screen === 'end'){ S.screen = 'walk'; }
+    back();
+  });
+  on('restart','click', function(){
+    S.trail = ['m1']; S.history = []; S.animate = null;
+    S.screen = 'intro'; S.copied = false; S.gated = CONFIG.gateEnabled;
+    render();
+  });
+
+  /* ---- gate ---- */
+  on('tocopy','click', function(){
+    S.screen = (CONFIG.gateEnabled && S.gated) ? 'gate' : 'copy';
+    render();
+  });
+  on('skip','click', function(){ S.gated = false; S.screen = 'copy'; render(); });
+  on('send','click', submitEmail);
+  on('email','keydown', function(e){ if (e.key === 'Enter') submitEmail(); });
+
+  /* ---- copy out ---- */
+  on('copy','click', function(){
+    var text = sequenceText();
+    var finish = function(){ S.copied = true; render(); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(finish, function(){ legacyCopy(text); finish(); });
+    } else { legacyCopy(text); finish(); }
+  });
+}
+
+function legacyCopy(text){
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly','');
+    ta.style.position = 'fixed'; ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  } catch (err) { /* clipboard unavailable — the text is on screen and selectable */ }
+}
+
+function submitEmail(){
+  var input = document.getElementById('email');
+  var err   = document.getElementById('err');
+  var value = (input && input.value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)){
+    if (err) err.classList.add('on');
+    if (input) input.focus();
+    return;
+  }
+  /* fire and forget: a webhook failure must never block the sequence or the booking link */
+  if (CONFIG.webhookUrl){
+    try {
+      fetch(CONFIG.webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: value,
+          industry: S.industry,
+          valueBand: S.value,
+          coldBand: S.cold,
+          outcome: S.outcome,
+          source: 'reactivation-sequence-builder'
+        })
+      })['catch'](function(e){ console.warn('lead webhook failed, continuing anyway', e); });
+    } catch (e){ console.warn('lead webhook threw, continuing anyway', e); }
+  }
+  S.gated = false;
+  S.screen = 'copy';
+  render();
+}
+
+/* ============================ BOOT ============================ */
+S.cur = detectCur();
+S.gated = CONFIG.gateEnabled;
+render();
+</script>
+</body>
+</html>
