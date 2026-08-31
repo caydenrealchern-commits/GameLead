@@ -69,22 +69,27 @@ below, the direction they arrive from. `prefers-reduced-motion` and
 
 ## Structure
 
-Two acts. Act 1 teaches the branch logic on one thread at a time; act 2 shows
-what the same sequence does to a list.
+Inbox-first. You name a real lead, walk their conversation, then see what the
+same sequence does to a whole list.
 
 ```
-INPUTS  industry · job value · how long cold
+INPUTS   industry · job value · how long cold
    │
-ACT 1   Lead 1, then Lead 2 — you choose at both decision points.
-        Lead 2's branches are filtered so you cannot land on the same
-        ending twice; the inbox only makes sense if two things happened.
+INBOX    empty, with one field: name a lead you actually have.
+         The row appears as "Not contacted". Tap it to open the thread.
    │
-ACT 2   Ten leads. Yours are already resolved, the other eight run on a
-        fixed distribution. Step day 0 → 3 → 7 → 14 and watch the tally
-        move. Any thread opens in full.
+ACT 1    That lead's journey. You choose at both decision points.
    │
-COPY-OUT · GATE · OFFER   unchanged
+ACT 2    Ten leads. Yours sits at the top, already resolved; the other
+         nine run on a fixed distribution. Step day 0 → 3 → 7 → 14 and
+         watch the tally move. Any thread opens in full.
+   │
+COPY-OUT · GATE · OFFER
 ```
+
+Naming the lead is the only typing in the tool, and it is the point: a sequence
+addressed to "Dave Wilson" reads as something you might actually send, where the
+same screen headed "Your old lead" reads as a demo.
 
 Act 1's single-lead machine:
 
@@ -109,12 +114,14 @@ booking arriving off message 4. This is fixed, not randomised — a run where
 nobody books argues against the tool, and a run where everybody books is not
 believable.
 
-The totals are exact rather than approximate because act 1 filters out branches
-leading to an ending already seen, so the user's two leads always differ. That
-leaves only ten reachable input combinations, and a ten-slot pool minus the
-user's two claims lands on 3/1/6 every time. The message-4 booking can never
-come from the user, because the state machine has no reply branch after message
-4 — so it is always one of the automatic eight.
+The totals are exact rather than approximate. The user's single lead claims one
+slot out of a fixed ten-slot pool, and whichever of the four possible outcomes
+they reach, the remaining nine still land on 3/1/6. The message-4 booking can
+never come from the user, because the state machine has no reply branch after
+message 4 — so it is always one of the automatic nine.
+
+The automatic leads are spread through the list by computation rather than a
+fixed table, so the layout holds however many slots the user claims.
 
 That exactness is what lets the day-by-day notes state hard numbers ("eight say
 nothing", "six never answer") instead of hedging.
@@ -127,12 +134,15 @@ Two suites, both run in Chromium at 390px and 360px.
 out of each, day stamps, reduced motion, 360px overflow, and that no message is
 byte-identical across two industries.
 
-`test2.js` covers the campaign: that act 1 yields two different endings, that
-the totals land on 3/1/6 and exactly one message-4 booking for every reachable
-combination, that the reveal advances and the tally increments correctly day by
-day, skip-to-result, every thread opening and closing, back navigation from
-each new screen, and that continue reaches the unchanged gate, copy-out and
-offer.
+`test2.js` covers the naming step and the campaign: that an empty name is
+rejected, whitespace is normalised, renaming works, the name carries into the
+thread header and to the top of the campaign, and that markup typed into the
+name is never rendered as HTML. Then that the totals land on 3/1/6 with exactly
+one message-4 booking for every outcome the user can reach, that the reveal
+advances and the tally increments correctly day by day, skip-to-result, every
+thread opening and closing, back navigation from each new screen (including
+falling out of the walkthrough back to the inbox), and that continue reaches
+the unchanged gate, copy-out and offer.
 
 A separate lint pass checks all 96 input combinations (576 messages) for
 assembly artifacts. An unhurried run reaches the final tally in about 40

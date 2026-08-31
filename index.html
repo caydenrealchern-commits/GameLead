@@ -223,6 +223,21 @@ input[type=email]:focus{outline:none; border-color:var(--ink)}
 .offer p:last-of-type{margin-bottom:17px}
 .compliance{margin-top:22px; font-size:12px; color:var(--ink3); line-height:1.5; letter-spacing:-.004em}
 
+/* ---------- act 1: the inbox where they name a lead ---------- */
+.inbox-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:9px}
+.inbox-head h2{font-size:23px; font-weight:660; letter-spacing:-.022em}
+.inbox-meta{flex:0 0 auto; font-size:11.5px; color:var(--ink3); letter-spacing:-.004em; text-align:right}
+.emptybox{background:var(--card); border:1px dashed var(--line2); border-radius:var(--r);
+  padding:20px 16px; text-align:center; font-size:14px; color:var(--ink3);
+  letter-spacing:-.006em; line-height:1.5; margin-bottom:14px}
+input[type=text]{
+  width:100%; background:var(--card); border:1px solid var(--line2); border-radius:var(--r);
+  color:var(--ink); padding:14px; font-size:16px; margin-bottom:10px;
+  font-family:inherit; letter-spacing:-.01em;
+}
+input[type=text]:focus{outline:none; border-color:var(--ink)}
+.chip.fresh{background:rgba(0,0,0,.05); color:var(--ink2)}
+
 /* ---------- act 2: the campaign inbox ----------
    Status is the only place colour carries meaning here, so the chips are
    the one strongly coloured element and the accent stays out of their way. */
@@ -255,6 +270,7 @@ input[type=email]:focus{outline:none; border-color:var(--ink)}
 .row-main p{font-size:13px; color:var(--ink3); letter-spacing:-.006em; margin-top:2px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .row.star .row-main p{white-space:normal; color:var(--ink2)}
+#startlead .row-main p{color:var(--ink2); font-weight:500}
 .flag{display:inline-block; margin-top:6px; font-size:11px; font-weight:590;
   letter-spacing:-.002em; color:var(--ink); background:var(--accent);
   border-radius:5px; padding:2px 7px}
@@ -279,6 +295,8 @@ input[type=email]:focus{outline:none; border-color:var(--ink)}
 }
 
 @media (max-width:374px){
+  .inbox-head{flex-direction:column; align-items:flex-start; gap:2px}
+  .inbox-meta{text-align:left}
   .row-top b{font-size:14px}
   .chip{font-size:10.5px; padding:3px 6px}
 }
@@ -334,13 +352,24 @@ var CONFIG = {
 
   days: { m1:0, m2c:3, m3:7, m4:14 },
 
-  act1Leads: 2,
+  act1Leads: 1,
+
+  leadEntry: {
+    title:       'Your inbox',
+    lede:        'Start with one real lead — someone who asked you for a price and then went quiet. A first name is enough.',
+    placeholder: 'e.g. Dave Wilson',
+    add:         'Add to inbox',
+    empty:       'Nothing in here yet. Add the lead you keep meaning to chase.',
+    ready:       'Tap the row to open the conversation.',
+    change:      'Use a different name',
+    error:       'Give the lead a name first.'
+  },
   campaignSize: 10,
   revealDays: [0, 3, 7, 14],
   act2: {
-    framing:    'That’s two. Here’s what the other eight did.',
-    enterCta:   'See the other eight',
-    lede:       'Same three questions, same five messages, sent to ten old leads on the same schedule. You handled the first two yourself.',
+    framing:    'That’s one lead. Now the part that actually matters — the same sequence across a whole list.',
+    enterCta:   'See it run across ten',
+    lede:       'Same five messages, sent to ten old leads on the same schedule. The first one is the lead you just handled yourself.',
     tally:      { messaged:'messaged', booked:'booked', declined:'declined', noreply:'no reply', waiting:'still out' },
     skip:       'Skip to the result',
     advance:    'Advance to day',
@@ -613,7 +642,7 @@ COPY.campaign = {
     14: 'Message 4 — the one you did not want to send — goes to the seven. One books. Six never answer, and now you know that for certain.'
   },
 
-  statusLabels: { booked:'Booked', declined:'Declined', noreply:'No reply', waiting:'Waiting' },
+  statusLabels: { booked:'Booked', declined:'Declined', noreply:'No reply', waiting:'Waiting', fresh:'Not contacted' },
   handled: 'you handled this one',
 
   done: {
@@ -681,13 +710,21 @@ function buildCampaign(userLeads){
     if (ix < 0)
       for (j = 0; j < pool.length; j++) if (pool[j][0] === want[0]){ ix = j; break; }
     if (ix >= 0) pool.splice(ix, 1);
-    leads.push({ name:names[u], outcome:want[0], stage:want[1], byUser:true });
+    leads.push({ name:S.leadName || names[u], outcome:want[0], stage:want[1], byUser:true });
   }
 
-  /* spread what is left through the list so the resolved ones do not clump
-     at the top and the message 4 booking is not always last */
-  var spread = [2,5,0,7,3,1,6,4], slots = [];
-  for (j = 0; j < pool.length; j++) slots[spread[j]] = pool[j];
+  /* Spread what is left through the list so the resolved ones do not clump at
+     the top and the message 4 booking is never last. Computed rather than a
+     fixed table, so it holds however many leads the user names themselves. */
+  var quiet = [], loud = [], slots = [], n = pool.length;
+  for (j = 0; j < n; j++) (pool[j][0] === 'noreply' ? quiet : loud).push(pool[j]);
+  var gap = n / (loud.length + 1);
+  for (j = 0; j < loud.length; j++){
+    var at = Math.min(n - 1, Math.max(0, Math.round(gap * (j + 1)) - 1));
+    while (slots[at]) at = (at + 1) % n;          /* never overwrite a placed lead */
+    slots[at] = loud[j];
+  }
+  for (j = 0; j < n; j++) if (!slots[j]) slots[j] = quiet.shift();
 
   var counters = {};
   for (j = 0; j < slots.length; j++){
@@ -800,6 +837,7 @@ var S = {
 
   /* act 1 runs once per guided lead; act 2 works off what they produced */
   leadIdx:0,
+  leadName:'',
   leadOutcomes:[],
   campaign:null,
   dayIdx:0,
@@ -949,9 +987,9 @@ function screenWalk(){
   var n = cur(), I = COPY.industries[S.industry], r = COPY.tones[S.value].register;
   var body = '<div class="screen on">' + railHtml()
     + '<div class="phone">'
-      + '<div class="phone-top"><div class="av">'+esc(COPY.campaign.names[S.leadIdx].charAt(0))+'</div>'
-        + '<div><b>'+esc(COPY.campaign.names[S.leadIdx])+'</b><small>'+esc(I.who)+' · lead '
-          +(S.leadIdx+1)+' of '+CONFIG.campaignSize+'</small></div></div>'
+      + '<div class="phone-top"><div class="av">'+esc(S.leadName.charAt(0).toUpperCase())+'</div>'
+        + '<div><b>'+esc(S.leadName)+'</b><small>'+esc(I.who)+' · '+esc(bandLabel(S.value))
+          +'</small></div></div>'
       + '<div class="thread" id="thread">'+threadHtml()+'</div>'
     + '</div>';
 
@@ -959,7 +997,7 @@ function screenWalk(){
     var noteKey = (n.msg === 'm1') ? ('m1' + S.cold) : n.msg;
     var noteText = COPY.notes[noteKey] || COPY.notes[n.msg];
     body += '<div class="note" id="note"><b>'+esc(MSG_TITLE[n.msg])+' · why this works</b><p>'+esc(noteText)+'</p></div>'
-      + '<div class="nav"><button class="back" id="back" aria-label="Back"'+(S.history.length?'':' disabled')+'>'
+      + '<div class="nav"><button class="back" id="back" aria-label="Back">'
       + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>'
       + '<button class="btn" id="next" data-next="'+n.next+'">'+(node(n.next).k==='end'?'See the outcome':'Continue')+'</button></div>';
   }
@@ -987,7 +1025,7 @@ function screenWalk(){
       ? 'This one goes differently — you have seen where the other branch ends.'
       : n.prompt;
     body += '<div class="choices"><h4>'+esc(prompt)+'</h4>'+o+'</div>'
-      + '<div class="nav"><button class="back" id="back" aria-label="Back"'+(S.history.length?'':' disabled')+'>'
+      + '<div class="nav"><button class="back" id="back" aria-label="Back">'
       + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button></div>';
   }
 
@@ -1014,6 +1052,33 @@ function screenEnd(){
       + '<div class="nav" style="margin-top:9px">'
         + '<button class="btn ghost sm" id="back">Back a step</button></div>'
     + '</div></div>';
+}
+
+function screenMyInbox(){
+  var L = CONFIG.leadEntry, named = !!S.leadName;
+
+  var body = named
+    ? '<div class="rows"><button class="row star" id="startlead">'
+        + '<div class="row-av">'+esc(S.leadName.charAt(0).toUpperCase())+'</div>'
+        + '<div class="row-main"><div class="row-top"><b>'+esc(S.leadName)+'</b>'
+        + '<span class="chip fresh">'+esc(L.status || COPY.campaign.statusLabels.fresh)+'</span></div>'
+        + '<p>'+esc(L.ready)+'</p></div></button></div>'
+      + '<button class="textlink" id="rename">'+esc(L.change)+'</button>'
+    : '<p class="emptybox">'+esc(L.empty)+'</p>'
+      + '<div class="err" id="nameerr">'+esc(L.error)+'</div>'
+      + '<input type="text" id="leadname" placeholder="'+esc(L.placeholder)+'" '
+        + 'autocomplete="off" autocapitalize="words" maxlength="40" enterkeyhint="done">'
+      + '<button class="btn" id="addlead">'+esc(L.add)+'</button>';
+
+  return '<div class="screen on">'
+    + '<div class="inbox-head"><h2>'+esc(L.title)+'</h2>'
+      + '<span class="inbox-meta">'+esc(COPY.industries[S.industry].label)
+      + ' · ' + esc(bandLabel(S.value)) + '</span></div>'
+    + '<p class="sub" style="margin-bottom:20px">'+esc(L.lede)+'</p>'
+    + body
+    + '<div class="nav" style="margin-top:18px">'
+      + '<button class="btn ghost sm" id="tointro">Change my answers</button></div>'
+    + '<p class="compliance">'+esc(CONFIG.compliance)+'</p></div>';
 }
 
 function screenInbox(){
@@ -1182,6 +1247,7 @@ function render(){
   if      (S.screen === 'intro')  app.innerHTML = screenIntro();
   else if (S.screen === 'walk')   app.innerHTML = screenWalk();
   else if (S.screen === 'end')    app.innerHTML = screenEnd();
+  else if (S.screen === 'myinbox')app.innerHTML = screenMyInbox();
   else if (S.screen === 'inbox')  app.innerHTML = screenInbox();
   else if (S.screen === 'thread') app.innerHTML = screenThread();
   else if (S.screen === 'gate')   app.innerHTML = screenGate();
@@ -1226,7 +1292,30 @@ function wire(){
   on('go','click', function(){
     if (!(S.industry && S.value && S.cold)) return;
     S.seq = buildSequence(S.industry, S.value, S.cold);
-    S.trail = ['m1']; S.history = []; S.animate = 'm1'; S.screen = 'walk';
+    S.screen = 'myinbox';
+    render();
+  });
+
+  /* ---- naming the lead ---- */
+  var addLead = function(){
+    var el = document.getElementById('leadname');
+    var v  = (el && el.value || '').trim().replace(/\s+/g, ' ');
+    if (!v){
+      var e = document.getElementById('nameerr');
+      if (e) e.classList.add('on');
+      if (el) el.focus();
+      return;
+    }
+    S.leadName = v;
+    render();
+  };
+  on('addlead','click', addLead);
+  on('leadname','keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); addLead(); } });
+  on('rename','click', function(){ S.leadName = ''; render(); });
+  on('tointro','click', function(){ S.screen = 'intro'; render(); });
+  on('startlead','click', function(){
+    S.trail = ['m1']; S.history = []; S.animate = 'm1';
+    S.leadIdx = 0; S.leadOutcomes = []; S.screen = 'walk';
     render();
   });
 
@@ -1237,7 +1326,8 @@ function wire(){
     reps[i].addEventListener('click', function(e){ go(e.currentTarget.getAttribute('data-go')); });
   }
   on('back','click', function(){
-    if (S.screen === 'end'){ S.screen = 'walk'; }
+    if (S.screen === 'end'){ S.screen = 'walk'; back(); return; }
+    if (!S.history.length){ S.screen = 'myinbox'; render(); return; }   /* first step -> inbox */
     back();
   });
 
@@ -1283,7 +1373,7 @@ function wire(){
   on('restart','click', function(){
     S.trail = ['m1']; S.history = []; S.animate = null;
     S.screen = 'intro'; S.copied = false; S.gated = CONFIG.gateEnabled;
-    S.leadIdx = 0; S.leadOutcomes = []; S.campaign = null;
+    S.leadIdx = 0; S.leadName = ''; S.leadOutcomes = []; S.campaign = null;
     S.dayIdx = 0; S.openLead = null; S.inboxScroll = 0;
     render();
   });
