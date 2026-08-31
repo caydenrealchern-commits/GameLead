@@ -8,11 +8,23 @@ Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
 
 ## Deploy
 
-Two files: `index.html` and `og.png`. Drag the folder onto
-[app.netlify.com/drop](https://app.netlify.com/drop). No build step, no
+Two files: `index.html` and `og.png`, plus an optional `netlify.toml` for
+caching and security headers. Drag them (or the zip) onto
+[app.netlify.com/drop](https://app.netlify.com/drop) — no account required to
+deploy, though you need one to keep the site. No build step, no
 dependencies, no backend, no API keys, nothing metered. The optional lead
 webhook is the only network request the page can make; with `webhookUrl` blank
 it makes none at all.
+
+### Order matters
+
+Netlify Drop gives you a random subdomain first, so pick your final site name
+*before* editing the share tags — otherwise you edit and re-drop twice.
+
+1. Drop the zip. Netlify assigns something like `sparkly-tiramisu-a1b2c3`.
+2. **Site configuration → Change site name** → pick the real one. The URL
+   becomes `https://<your-name>.netlify.app`.
+3. *Now* do the two steps below, then drop the zip again.
 
 Then two things, in this order:
 
