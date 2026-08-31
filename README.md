@@ -13,8 +13,8 @@ caching and security headers. Drag them (or the zip) onto
 [app.netlify.com/drop](https://app.netlify.com/drop), no account required to
 deploy, though you need one to keep the site. No build step, no
 dependencies, no backend, no API keys, nothing metered. The optional lead
-webhook is the only network request the page can make; with `webhookUrl` blank
-it makes none at all.
+The page makes no network requests at all. Nothing is collected, nothing is
+sent, and there is no backend to fail.
 
 ### Rebuilding the deploy zip
 
@@ -38,54 +38,12 @@ Netlify Drop gives you a random subdomain first, so pick your final site name
    becomes `https://<your-name>.netlify.app`.
 3. *Now* do the two steps below, then drop the zip again.
 
-Then two things, in this order:
+Then check the link preview: paste the URL into LinkedIn's Post Inspector to
+force a re-scrape before posting for real. LinkedIn caches the first fetch
+hard, and you do not want it caching a card-less version.
 
-1. **Replace `YOUR-DOMAIN`**. It appears four times in the `<head>` of
-   `index.html`, in the Open Graph and Twitter tags. Swap in the URL Netlify
-   gives you and re-drop the folder. Without this the link renders on LinkedIn
-   as a bare URL with no preview card, because scrapers need absolute image
-   URLs. Check it with LinkedIn's Post Inspector before posting.
-2. **Set `CONFIG.webhookUrl`**, until it has a value, the email gate accepts
-   addresses and discards them. If you would rather not collect emails at all
-   for now, set `gateEnabled: false` instead and the copy-out becomes ungated.
-   Either is fine; collecting into a blank webhook is not.
-
-## Configure
-
-Everything tunable lives in the `CONFIG` object at the top of the `<script>`:
-
-| Key | What it does |
-|---|---|
-| `bookingUrl` / `bookingLabel` | The offer CTA. `free` should stay in the label. |
-| `offerHeading` / `offerBody` | Post-gate offer copy. |
-| `quietOffer` / `quietOfferLink` | The single-line offer repeated on the three ending screens. |
-| `webhookUrl` | Where the email gate POSTs. Blank skips the request entirely. |
-| `gateEnabled` | `false` shows the copy-out without asking for an email. |
-| `typingMs` | Typing-indicator duration. Ignored under `prefers-reduced-motion`. |
-| `currencyDefault` | `'£'`, `'$'`, or `null` to detect from `navigator.language`. |
-| `sender` / `business` | Placeholders the user replaces before sending. |
-| `days` | Send timings for messages 1, 2c, 3 and 4. |
-| `compliance` | The opt-out / local-rules note shown in the UI. |
-
-A webhook failure is caught and logged; it never blocks the copy-out or the
-booking link.
-
-## How the copy is built
-
-Not 96 hand-written sequences. Three layers assembled at runtime by
-`buildSequence(industry, valueBand, coldBand)`:
-
-- **8 industry vocabulary packs**, the job noun, the realistic objection, the
-  two-named-times booking line, and the industry-specific reason-to-act for
-  message 3.
-- **4 tone templates**, one per average job value, a £300 job gets short and
-  casual, a £15,000 job gets longer and consultative. Each supplies its own
-  connectives and sign-offs, so the bands differ by sentence, not by a flag.
-- **3 openers**, one per how-long-cold band, "we spoke a few weeks ago" and
-  "we quoted you over a year ago" are different conversations.
-
-Each pack carries two registers (`q` quick / `c` considered); the tone template
-picks which one applies. All strings live in `COPY`; none are inline in logic.
+The site URL is baked into three Open Graph tags in the `<head>`. If the site
+ever moves, those are the only lines that need changing.
 
 ## Design
 
@@ -121,7 +79,7 @@ ACT 2    Ten leads. Yours sits at the top, already resolved; the other
          nine run on a fixed distribution. Step day 0 → 3 → 7 → 14 and
          watch the tally move. Any thread opens in full.
    │
-COPY-OUT · GATE · OFFER
+COPY-OUT · OFFER
 ```
 
 Naming the lead is the only typing in the tool, and it is the point: a sequence
@@ -141,8 +99,9 @@ Msg 1  Day 0 ─┬─ interested ──────► Msg 2a ──► won
                                                        └─────► Msg 4  Day 14 ──► cleaned
 ```
 
-The walkthrough is entirely ungated. Only the copy-out step asks for an email,
-and it can be skipped.
+Nothing is gated. The whole walkthrough and the full five-message sequence are
+free to take, and the only call to action is booking a call to have the
+campaign run at scale.
 
 ## The campaign distribution
 
@@ -179,7 +138,7 @@ one message-4 booking for every outcome the user can reach, that the reveal
 advances and the tally increments correctly day by day, skip-to-result, every
 thread opening and closing, back navigation from each new screen (including
 falling out of the walkthrough back to the inbox), and that continue reaches
-the unchanged gate, copy-out and offer.
+the copy-out and offer with no email asked for anywhere.
 
 A separate lint pass checks all 96 input combinations (576 messages) for
 assembly artifacts. An unhurried run reaches the final tally in about 40
