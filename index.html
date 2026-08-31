@@ -237,7 +237,10 @@ input[type=email]:focus{outline:none; border-color:var(--ink)}
 
 .offer{margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px}
 .offer::before{content:''; display:block; width:26px; height:2px; background:var(--accent); margin-bottom:14px}
-.offer h3{font-size:19px; font-weight:660; margin-bottom:11px; letter-spacing:-.022em; line-height:1.2}
+.offer h3{font-size:19px; font-weight:660; margin-bottom:11px; letter-spacing:-.022em; line-height:1.25}
+.terms{list-style:none; margin:0 0 17px; padding:0; border-top:1px solid var(--line)}
+.terms li{border-bottom:1px solid var(--line); padding:10px 0; font-size:14px;
+  color:var(--ink); letter-spacing:-.008em; line-height:1.4}
 .offer p{color:var(--ink2); font-size:15px; line-height:1.5; letter-spacing:-.008em; margin-bottom:11px}
 .offer p:last-of-type{margin-bottom:17px}
 .compliance{margin-top:22px; font-size:12px; color:var(--ink3); line-height:1.5; letter-spacing:-.004em}
@@ -352,13 +355,20 @@ input[type=text]:focus{outline:none; border-color:var(--ink)}
 
 var CONFIG = {
   bookingUrl:   'https://calendly.com/caydenrealchern/30min',
-  bookingLabel: 'Book a free 30 minute setup call',
-  offerHeading: 'The sequence is the easy half',
+  bookingLabel: 'Book a free 30 minute call',
+  offerHeading: 'Ten was the demo. Your list is the campaign.',
   offerBody: [
-    "You've got the sequence. Running it by hand across a few hundred old leads is the part nobody does.",
-    "I'll set it up to run automatically for you, free. I'm building case studies at the moment, so I want the result more than the fee."
+    "Sending is the easy part. Doing it across every old lead you have — tracking who replies, stopping the sequence the second someone answers — is the part nobody keeps up with. So I run it for you, up to 10,000 leads in one campaign.",
+    "Nothing to pay to set it up and nothing to pay to run it. We agree how many reactivated leads you want before anything sends, and the fee is only due once you have them. Miss the number and you owe me nothing.",
+    "What a list returns depends on the list, which is exactly why we set that number together rather than me promising you one."
   ],
-  quietOffer: 'Want this running automatically across your whole old-lead list? I set it up free while I build case studies — ',
+  /* the three facts that make the offer, read before the button is pressed */
+  offerTerms: [
+    'Up to 10,000 leads in a single campaign',
+    'Nothing to pay up front — setup and sending included',
+    'You pay only once your agreed number of reactivated leads is hit'
+  ],
+  quietOffer: 'Want this run across your whole list? Up to 10,000 leads, nothing up front, and you pay only once your target is hit — ',
   quietOfferLink: 'book a 30 minute call',
 
   webhookUrl: '',           /* e.g. 'https://hooks.zapier.com/...' — blank just skips the POST */
@@ -1241,6 +1251,9 @@ function screenCopy(){
     + '<div class="offer">'
       + '<h3>'+esc(CONFIG.offerHeading)+'</h3>'
       + CONFIG.offerBody.map(function(p){ return '<p>'+esc(p)+'</p>'; }).join('')
+      + '<ul class="terms">'
+      + CONFIG.offerTerms.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('')
+      + '</ul>'
       + '<a class="btn" href="'+esc(CONFIG.bookingUrl)+'" target="_blank" rel="noopener" id="book">'+esc(CONFIG.bookingLabel)+'</a>'
     + '</div>'
     + '<button class="textlink" id="restart">Start again with different answers</button>'
