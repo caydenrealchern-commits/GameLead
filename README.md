@@ -1,7 +1,7 @@
 # Reactivation Sequence Builder
 
 An interactive guide that walks a business owner through a five-message SMS
-database-reactivation sequence written for their own business — including the
+database-reactivation sequence written for their own business, including the
 branches most people get wrong.
 
 Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
@@ -10,7 +10,7 @@ Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
 
 Two files: `index.html` and `og.png`, plus an optional `netlify.toml` for
 caching and security headers. Drag them (or the zip) onto
-[app.netlify.com/drop](https://app.netlify.com/drop) — no account required to
+[app.netlify.com/drop](https://app.netlify.com/drop), no account required to
 deploy, though you need one to keep the site. No build step, no
 dependencies, no backend, no API keys, nothing metered. The optional lead
 webhook is the only network request the page can make; with `webhookUrl` blank
@@ -25,13 +25,13 @@ zip reactivation-builder-netlify.zip index.html og.png netlify.toml
 ```
 
 The zip is gitignored on purpose. It is derived from those three files, and a
-committed copy would go stale the moment the page changed — anyone downloading
+committed copy would go stale the moment the page changed, anyone downloading
 it from the repo would deploy an old build.
 
 ### Order matters
 
 Netlify Drop gives you a random subdomain first, so pick your final site name
-*before* editing the share tags — otherwise you edit and re-drop twice.
+*before* editing the share tags, otherwise you edit and re-drop twice.
 
 1. Drop the zip. Netlify assigns something like `sparkly-tiramisu-a1b2c3`.
 2. **Site configuration → Change site name** → pick the real one. The URL
@@ -40,12 +40,12 @@ Netlify Drop gives you a random subdomain first, so pick your final site name
 
 Then two things, in this order:
 
-1. **Replace `YOUR-DOMAIN`** — it appears four times in the `<head>` of
+1. **Replace `YOUR-DOMAIN`**. It appears four times in the `<head>` of
    `index.html`, in the Open Graph and Twitter tags. Swap in the URL Netlify
    gives you and re-drop the folder. Without this the link renders on LinkedIn
    as a bare URL with no preview card, because scrapers need absolute image
    URLs. Check it with LinkedIn's Post Inspector before posting.
-2. **Set `CONFIG.webhookUrl`** — until it has a value, the email gate accepts
+2. **Set `CONFIG.webhookUrl`**, until it has a value, the email gate accepts
    addresses and discards them. If you would rather not collect emails at all
    for now, set `gateEnabled: false` instead and the copy-out becomes ungated.
    Either is fine; collecting into a blank webhook is not.
@@ -75,13 +75,13 @@ booking link.
 Not 96 hand-written sequences. Three layers assembled at runtime by
 `buildSequence(industry, valueBand, coldBand)`:
 
-- **8 industry vocabulary packs** — the job noun, the realistic objection, the
+- **8 industry vocabulary packs**, the job noun, the realistic objection, the
   two-named-times booking line, and the industry-specific reason-to-act for
   message 3.
-- **4 tone templates**, one per average job value — a £300 job gets short and
+- **4 tone templates**, one per average job value, a £300 job gets short and
   casual, a £15,000 job gets longer and consultative. Each supplies its own
   connectives and sign-offs, so the bands differ by sentence, not by a flag.
-- **3 openers**, one per how-long-cold band — "we spoke a few weeks ago" and
+- **3 openers**, one per how-long-cold band, "we spoke a few weeks ago" and
   "we quoted you over a year ago" are different conversations.
 
 Each pack carries two registers (`q` quick / `c` considered); the tone template
@@ -96,7 +96,7 @@ labels) rather than one value everywhere.
 
 Colour is deliberately scarce. Near-black carries every primary action, and
 the accent appears in exactly three places: the mark, the rule on the teaching
-note, and the underline under the headline — under it rather than in it,
+note, and the underline under the headline, under it rather than in it,
 because the accent on white would fail contrast.
 
 Press feedback lands on pointer-down, not on release. Transitions are
@@ -147,7 +147,7 @@ and it can be skipped.
 ## The campaign distribution
 
 Ten leads always total **3 booked / 1 declined / 6 no reply**, with exactly one
-booking arriving off message 4. This is fixed, not randomised — a run where
+booking arriving off message 4. This is fixed, not randomised, a run where
 nobody books argues against the tool, and a run where everybody books is not
 believable.
 
@@ -155,7 +155,7 @@ The totals are exact rather than approximate. The user's single lead claims one
 slot out of a fixed ten-slot pool, and whichever of the four possible outcomes
 they reach, the remaining nine still land on 3/1/6. The message-4 booking can
 never come from the user, because the state machine has no reply branch after
-message 4 — so it is always one of the automatic nine.
+message 4, so it is always one of the automatic nine.
 
 The automatic leads are spread through the list by computation rather than a
 fixed table, so the layout holds however many slots the user claims.

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reactivation Sequence Builder</title>
-<meta name="description" content="Name one old lead who went quiet and get the five messages that reopen them — including what to send when they ignore you.">
+<meta name="description" content="Name one old lead who went quiet and get the five messages that reopen them, including what to send when they ignore you.">
 
 <!-- Link preview for LinkedIn, Facebook, WhatsApp, Slack, iMessage.
      After Netlify gives you a URL, replace the two YOUR-DOMAIN placeholders
@@ -13,7 +13,7 @@
 <meta property="og:type"        content="website">
 <meta property="og:site_name"   content="Volt">
 <meta property="og:title"       content="Your old leads are not dead. They are unanswered.">
-<meta property="og:description" content="Name one old lead who went quiet and get the five messages that reopen them — including what to send when they ignore you. Free, no signup.">
+<meta property="og:description" content="Name one old lead who went quiet and get the five messages that reopen them, including what to send when they ignore you. Free, no signup.">
 <meta property="og:url"         content="https://YOUR-DOMAIN/">
 <meta property="og:image"       content="https://YOUR-DOMAIN/og.png">
 <meta property="og:image:width"  content="1200">
@@ -152,7 +152,7 @@ select.empty{color:var(--ink3)}
   letter-spacing:-.012em; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:anywhere;
   animation:land 320ms var(--ease) both;
 }
-/* arrives from below — the direction it travels is where it came from */
+/* arrives from below, the direction it travels is where it came from */
 @keyframes land{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
 .bubble.out{align-self:flex-end; background:var(--ink); color:#fff; border-bottom-right-radius:5px}
 .bubble.in{align-self:flex-start; background:var(--in); border-bottom-left-radius:5px}
@@ -358,20 +358,20 @@ var CONFIG = {
   bookingLabel: 'Book a free 30 minute call',
   offerHeading: 'Ten was the demo. Your list is the campaign.',
   offerBody: [
-    "Sending is the easy part. Doing it across every old lead you have — tracking who replies, stopping the sequence the second someone answers — is the part nobody keeps up with. So I run it for you, up to 10,000 leads in one campaign.",
+    "Sending is the easy part. The part nobody keeps up with is doing it across every old lead you have: tracking who replies, stopping the sequence the second someone answers. So I run it for you, up to 10,000 leads in one campaign.",
     "Nothing to pay to set it up and nothing to pay to run it. We agree how many reactivated leads you want before anything sends, and the fee is only due once you have them. Miss the number and you owe me nothing.",
     "What a list returns depends on the list, which is exactly why we set that number together rather than me promising you one."
   ],
   /* the three facts that make the offer, read before the button is pressed */
   offerTerms: [
     'Up to 10,000 leads in a single campaign',
-    'Nothing to pay up front — setup and sending included',
+    'Nothing to pay up front: setup and sending included',
     'You pay only once your agreed number of reactivated leads is hit'
   ],
-  quietOffer: 'Want this run across your whole list? Up to 10,000 leads, nothing up front, and you pay only once your target is hit — ',
-  quietOfferLink: 'book a 30 minute call',
+  quietOffer: 'Want this run across your whole list? Up to 10,000 leads, nothing up front, and you pay only once your target is hit. ',
+  quietOfferLink: 'Book a 30 minute call',
 
-  webhookUrl: '',           /* e.g. 'https://hooks.zapier.com/...' — blank just skips the POST */
+  webhookUrl: '',           /* e.g. 'https://hooks.zapier.com/...'. Blank just skips the POST */
   gateEnabled: true,
   typingMs: 600,
   currencyDefault: null,    /* null = detect from navigator.language */
@@ -385,7 +385,7 @@ var CONFIG = {
 
   leadEntry: {
     title:       'Your inbox',
-    lede:        'Start with one real lead — someone who asked you for a price and then went quiet. A first name is enough.',
+    lede:        'Start with one real lead: someone who asked you for a price and then went quiet. A first name is enough.',
     placeholder: 'e.g. Dave Wilson',
     add:         'Add to inbox',
     empty:       'Nothing in here yet. Add the lead you keep meaning to chase.',
@@ -396,7 +396,7 @@ var CONFIG = {
   campaignSize: 10,
   revealDays: [0, 3, 7, 14],
   act2: {
-    framing:    'That’s one lead. Now the part that actually matters — the same sequence across a whole list.',
+    framing:    'That’s one lead. Now the part that actually matters: the same sequence across a whole list.',
     enterCta:   'See it run across ten',
     lede:       'Same five messages, sent to ten old leads on the same schedule. The first one is the lead you just handled yourself.',
     tally:      { messaged:'messaged', booked:'booked', declined:'declined', noreply:'no reply', waiting:'still out' },
@@ -427,13 +427,13 @@ COPY.industries = {
             c:"i can come thursday morning or monday afternoon, get up and actually look rather than guess from the ground. 45 minutes, no charge." },
     m2b:  { q:'if they start overflowing in the autumn, you’ve got my number.',
             c:'if it ever starts letting water in, message me and i’ll come and look, whether you use us or not.' },
-    m2c:  { q:'no rush — are the gutters still on the list, or shall i leave it?',
+    m2c:  { q:'no rush. are the gutters still on the list, or shall i leave it?',
             c:'know you’re busy. is the roof still something you’re planning, or has it been dealt with?' },
-    m3:   { q:'worth knowing — once the leaves drop everyone rings the same fortnight and i’m booked solid till november. i’ve still got a couple of mornings before that.',
+    m3:   { q:'worth knowing: once the leaves drop everyone rings the same fortnight and i’m booked solid till november. i’ve still got a couple of mornings before that.',
             c:'we’ve got scaffold going up two streets from you next month. doing yours while it’s already local takes the access cost down a long way, and on a roof that’s usually the biggest line on the quote.' },
     m4:   { q:'taking the gutters off my list. if it rains through this winter, just text.',
             c:'you’ve clearly got it covered. if the roof ever causes you grief, message me and i’ll come and look at it, quote or no quote.' },
-    yes:  { q:'yeah, they still need doing',    c:'yeah — never got it sorted actually' },
+    yes:  { q:'yeah, they still need doing',    c:'yeah, never got it sorted actually' },
     no:   { q:'got a mate to do them, cheers',  c:'we went with another firm in the end' }
   },
 
@@ -442,13 +442,13 @@ COPY.industries = {
     m1ref:{ q:'a service on the panels',        c:'putting solar on the house' },
     m1q:  { q:'did you get that booked?',       c:'did you end up going ahead with anyone?' },
     m2a:  { q:"i can come tuesday morning or thursday afternoon, check the output and clean them while i’m up there. hour, maybe less.",
-            c:"easiest is 20 minutes on the phone first — tuesday 10 or thursday 4? i’ll pull your roof up on the map and we can talk real numbers before anyone comes out." },
+            c:"easiest is 20 minutes on the phone first. tuesday 10 or thursday 4? i’ll pull your roof up on the map and we can talk real numbers before anyone comes out." },
     m2b:  { q:'if the generation drops off, give me a shout.',
-            c:'if you ever want a second opinion on someone else’s design, send it over — happy to look at it for nothing.' },
-    m2c:  { q:'quick one — do you still want the panels looking at?',
-            c:'just checking — is solar still on the cards, or has that idea been shelved?' },
+            c:'if you ever want a second opinion on someone else’s design, send it over, happy to look at it for nothing.' },
+    m2c:  { q:'quick one, do you still want the panels looking at?',
+            c:'just checking, is solar still on the cards, or has that idea been shelved?' },
     m3:   { q:'panels lose a real chunk of output once they’re dirty, and it always reads worst at the end of summer. i’m doing a run of them round your way next week.',
-            c:'one thing has changed — grid connection approvals are running about six weeks now. if you want a system actually generating through next summer, the paperwork realistically needs starting this side of christmas.' },
+            c:'one thing has changed: grid connection approvals are running about six weeks now. if you want a system actually generating through next summer, the paperwork realistically needs starting this side of christmas.' },
     m4:   { q:'if the app ever shows the generation dropping off, text me.',
             c:'if you ever want someone to sanity check a solar quote before you sign it, send it over. i’ll read it for nothing.' },
     yes:  { q:'yeah, output’s been rubbish',  c:'yeah, we still haven’t done anything about it' },
@@ -462,10 +462,10 @@ COPY.industries = {
     m2a:  { q:"thursday morning or friday lunchtime? about an hour, and you’ll have the certificate the same day.",
             c:"i’d want to see the place before giving you a proper figure. thursday morning or monday afternoon? half an hour, and you’ll have it in writing that evening." },
     m2b:  { q:'if it starts making noises this winter, give me a ring.',
-            c:'if you want a second pair of eyes when it’s commissioned, i’m about — no charge for that.' },
+            c:'if you want a second pair of eyes when it’s commissioned, i’m about, no charge for that.' },
     m2c:  { q:'still after that service, or has it been done?',
             c:'is the heating job still happening, or shall i close it off?' },
-    m3:   { q:'heads up — first proper cold week and my phone doesn’t stop, and everything after that is a fortnight’s wait. i’ve got space this month if you want it out of the way.',
+    m3:   { q:'heads up: first proper cold week and my phone doesn’t stop, and everything after that is a fortnight’s wait. i’ve got space this month if you want it out of the way.',
             c:'worth knowing: parts lead times go out to three or four weeks once the cold sets in, and nobody wants to be sat without heat waiting on a delivery. if it’s happening this year, october is the last comfortable month to start.' },
     m4:   { q:'taking you off my list. if the boiler plays up, you’ve got me.',
             c:'if you’re ever without heat and stuck, ring me anyway. i’ll tell you what i’d do even if you don’t use us.' },
@@ -477,17 +477,17 @@ COPY.industries = {
     label:'Dental & aesthetics', who:'Practice',
     m1ref:{ q:'a hygienist appointment',        c:'the treatment plan' },
     m1q:  { q:'did you ever get that booked?',  c:'did you decide to go ahead anywhere in the end?' },
-    m2a:  { q:"we’ve got tuesday 9:40 or thursday 3:20 — either suit? half an hour and you’re out.",
+    m2a:  { q:"we’ve got tuesday 9:40 or thursday 3:20. either suit? half an hour and you’re out.",
             c:"we’ve still got your plan on file so nothing needs redoing. tuesday 10 or thursday 4:30 for a 20 minute consult? no charge, and you’ll leave knowing the actual cost." },
     m2b:  { q:'we’ll take the reminder off. door’s open whenever.',
             c:'we’ll stop the follow-ups. your plan stays on file if you ever want to pick it back up.' },
     m2c:  { q:'want us to hold you a slot, or leave it for now?',
             c:'is the treatment still something you’re considering, or shall we close the file?' },
-    m3:   { q:'worth mentioning — we’re full from december for obvious reasons and hygienist slots always go first. november still has room.',
+    m3:   { q:'worth mentioning: we’re full from december for obvious reasons and hygienist slots always go first. november still has room.',
             c:'one thing has changed: the lab we use is putting its prices up in january, and we’re holding the figure on your plan until then. that isn’t a sales line, it’s just the last date it stands.' },
     m4:   { q:'if you want that appointment at any point, just reply and we’ll find you a slot.',
             c:'no more follow-ups from us. your plan stays on file, and if you want to talk it through in a year it’ll still be there.' },
-    yes:  { q:'yes please, that’d be good',   c:'yes — i’m still interested' },
+    yes:  { q:'yes please, that’d be good',   c:'yes, i’m still interested' },
     no:   { q:'i’ve registered elsewhere, thanks', c:'i’ve decided not to go ahead' }
   },
 
@@ -495,14 +495,14 @@ COPY.industries = {
     label:'Fitness', who:'Coach',
     m1ref:{ q:'coming in for a session',        c:'the coaching block' },
     m1q:  { q:'did you ever make it down?',     c:'did you end up starting with anyone?' },
-    m2a:  { q:"tuesday 6pm or saturday 9am — which suits? first one’s on us, just bring trainers.",
-            c:"let’s do 20 minutes on the phone first so i know what you’re actually training for — tuesday 7pm or thursday 1pm? i’ll put a rough plan together off the back of it." },
+    m2a:  { q:"tuesday 6pm or saturday 9am. which suits? first one’s on us, just bring trainers.",
+            c:"let’s do 20 minutes on the phone first so i know what you’re actually training for. tuesday 7pm or thursday 1pm? i’ll put a rough plan together off the back of it." },
     m2b:  { q:'door’s open whenever you fancy it.',
             c:'good luck with it, genuinely. if you ever want a second opinion on a programme, message me.' },
     m2c:  { q:'still fancy giving it a go, or is now not the time?',
             c:'is training still something you want to sort this year, or shall i leave it?' },
     m3:   { q:'new intake starts on the 4th. it’s the one week in the month where everyone walking in is a beginner, which is usually the bit people dread.',
-            c:'we start a new small group block on the 4th — six people, twelve weeks, and it doesn’t run again until january. january is the worst month to start anything, because everyone else is.' },
+            c:'we start a new small group block on the 4th: six people, twelve weeks, and it doesn’t run again until january. january is the worst month to start anything, because everyone else is.' },
     m4:   { q:'if you ever want to come in, just turn up. no need to book.',
             c:'most people i coach came back months after the first conversation, so this isn’t a door closing. it’s just me stopping messaging.' },
     yes:  { q:'go on then',                     c:'yeah, i’m still up for it' },
@@ -513,14 +513,14 @@ COPY.industries = {
     label:'Home services', who:'Trade',
     m1ref:{ q:'the work at yours',              c:'the job at your place' },
     m1q:  { q:'did you get it done in the end?', c:'did that ever go ahead?' },
-    m2a:  { q:"i’m in your area thursday morning or friday after lunch — either work? i’ll bring everything with me.",
+    m2a:  { q:"i’m in your area thursday morning or friday after lunch. either work? i’ll bring everything with me.",
             c:"i’d want to come and look again before i commit to a price, things move on. thursday morning or monday afternoon? half an hour, and i’ll price it properly off the back of it." },
     m2b:  { q:'if you need anything doing later on, you’ve got my number.',
             c:'if whoever’s doing it lets you down halfway, i’d still come and finish it. no awkwardness.' },
     m2c:  { q:'still want the work doing, or has it been sorted?',
             c:'is the job still on, or shall i take it off the list?' },
     m3:   { q:'i’m working two streets from you the week after next. if i do yours in the same run there’s no travel on it, which knocks a bit off.',
-            c:'we’re already booked on your road for a fortnight from the 12th. doing yours inside that run means the setup and travel is shared — that’s the only reason i can still hold the original price.' },
+            c:'we’re already booked on your road for a fortnight from the 12th. doing yours inside that run means the setup and travel is shared, and that’s the only reason i can still hold the original price.' },
     m4:   { q:'taking it off my list. text if you ever want it doing.',
             c:'if you want the quote again in six months, just ask and i’ll come and redo it properly rather than dust off an old number.' },
     yes:  { q:'yes please, still needs doing',  c:'yeah, we never got round to it' },
@@ -531,7 +531,7 @@ COPY.industries = {
     label:'Auto', who:'Garage',
     m1ref:{ q:'a service on the car',           c:'the bodywork' },
     m1q:  { q:'did you get it booked in?',      c:'did you ever get it sorted?' },
-    m2a:  { q:"thursday or friday — drop it in for 8 and it’ll be ready by 4. courtesy car if you need one.",
+    m2a:  { q:"thursday or friday. drop it in for 8 and it’ll be ready by 4. courtesy car if you need one.",
             c:"bring it down thursday morning or monday and i’ll put it on the ramp properly, go through it with you and price it there and then. 40 minutes and it costs nothing." },
     m2b:  { q:'if it starts playing up, bring it in.',
             c:'if the other garage finds something you’re not sure about, send me a photo and i’ll tell you whether it’s real.' },
@@ -549,10 +549,10 @@ COPY.industries = {
     label:'Other', who:'Business',
     m1ref:{ q:'the job',                        c:'the work' },
     m1q:  { q:'did it ever get done?',          c:'did you end up going ahead with anyone?' },
-    m2a:  { q:"thursday morning or friday afternoon — which is easier?",
+    m2a:  { q:"thursday morning or friday afternoon. which is easier?",
             c:"can i grab 20 minutes on the phone, tuesday 10 or thursday 4? far easier to go through properly than over text." },
     m2b:  { q:'you know where i am, whenever.',
-            c:'if it ever comes back round, i’m here — and i’ll pick it up from where we left off.' },
+            c:'if it ever comes back round, i’m here, and i’ll pick it up from where we left off.' },
     m2c:  { q:'still want it doing, or shall i leave it?',
             c:'is it still something you’re planning, or shall i close it off?' },
     m3:   { q:'my diary tends to fill about three weeks out. i’ve got room this month and i’d rather it went to someone who already asked.',
@@ -591,12 +591,12 @@ COPY.tones = {
         m4Lead:'i’ll stop chasing you now.' },
 
   b4: { label:'{c}10k+',              register:'c', reason:true,
-        m1tail:' happy either way — i’d rather know than keep wondering.',
+        m1tail:' happy either way, i’d rather know than keep wondering.',
         m2aLead:'that’s good to hear, thanks for replying.',
         m2aTail:' i’ll send the figures over beforehand so you’re not going in cold.',
-        m2bLead:'completely understood — thanks for taking the time to reply.',
+        m2bLead:'completely understood, and thanks for taking the time to reply.',
         m2cTail:' no pressure.',
-        m3Tail:' not rushing you — on a job this size the timing matters more than the decision.',
+        m3Tail:' not rushing you, but on a job this size the timing matters more than the decision.',
         m4Lead:'this is the last message, then i’ll leave you alone.' }
 };
 
@@ -604,7 +604,7 @@ COPY.tones = {
 COPY.openers = {
   fresh: {
     label:'Under 3 months',
-    pre: { q:'hi, it’s {s} from {b}. you got in touch about', c:'hi, it’s {s} at {b} — we spoke a few weeks ago about' },
+    pre: { q:'hi, it’s {s} from {b}. you got in touch about', c:'hi, it’s {s} at {b}. we spoke a few weeks ago about' },
     post:{ q:' a few weeks back.', c:'.' },
     reason:'didn’t want it to go quiet without asking.'
   },
@@ -616,7 +616,7 @@ COPY.openers = {
   },
   old: {
     label:'Over a year',
-    pre: { q:'hi, it’s {s} from {b}. bit out of the blue — we priced up', c:'hi, it’s {s} at {b}. out of the blue, i know: we quoted you for' },
+    pre: { q:'hi, it’s {s} from {b}. bit out of the blue, but we priced up', c:'hi, it’s {s} at {b}. out of the blue, i know: we quoted you for' },
     post:{ q:' for you a while back.', c:' over a year ago.' },
     reason:'i’m going back through old enquiries that never got a straight answer.'
   }
@@ -624,13 +624,13 @@ COPY.openers = {
 
 /* ---- the teaching layer: why each message is shaped this way ---- */
 COPY.notes = {
-  m1: 'One question, no pitch. You are restarting a conversation, not selling — the moment there is an offer in it, it reads as marketing and gets deleted.',
+  m1: 'One question, no pitch. You are restarting a conversation, not selling. The moment there is an offer in it, it reads as marketing and gets deleted.',
   m1fresh: 'They still remember you, so naming the enquiry is enough. Explaining yourself at length is what makes a recent follow-up feel odd.',
   m1mid:  'Six months of silence is not a no, it is a forgotten tab. Say when you quoted so they can place you without having to scroll back.',
   m1old:  'Name the gap out loud. Writing as though no time has passed is the single thing that makes an old-lead message feel automated.',
   m2a: 'Two named times, not "when suits?". An open question is a task they have to do; a choice of two is a yes or a no.',
   m2b: 'Take the no cleanly. Arguing costs you the referral and the next job, and a parked lead is worth far more than an annoyed one.',
-  m2c: 'Assume it was seen and forgotten, not ignored. It is shorter than message one on purpose — a repeat of the first message reads like a bot.',
+  m2c: 'Assume it was seen and forgotten, not ignored. It is shorter than message one on purpose, because a repeat of the first message reads like a bot.',
   m3: 'A real reason, tied to your trade and your diary. Invented deadlines get spotted immediately; a genuine change in cost or availability does not.',
   m4: 'The highest reply rate in the sequence, and the one nobody sends. "I will stop" removes the pressure they were avoiding, so they finally answer.'
 };
@@ -641,12 +641,12 @@ COPY.endings = {
   parked:{ badge:'Parked', title:'A no is a result. Silence is not.',
         body:'This is the branch people skip, and skipping it is expensive. Owners either argue with the no or vanish mid-conversation, and both close the door on the job in eighteen months.\n\nA clean exit keeps you as the person they call next time, and it takes one message.' },
   cleaned:{ badge:'List cleaned', title:'Four messages, no reply, and you have still gained.',
-        body:'You now know that lead is genuinely cold, which you did not know this morning. That is worth something on its own — you stop paying attention to a name that was never coming back.\n\nAnd message 4 is the one that most often gets an answer, which is exactly why it is the one owners are most reluctant to send.' }
+        body:'You now know that lead is genuinely cold, which you did not know this morning. That is worth something on its own. You stop paying attention to a name that was never coming back.\n\nAnd message 4 is the one that most often gets an answer, which is exactly why it is the one owners are most reluctant to send.' }
 };
 
 COPY.campaign = {
 
-  /* ten leads. names only — every thread uses the same generated sequence,
+  /* ten leads. names only. Every thread uses the same generated sequence,
      which is what a real campaign actually does. */
   names: ['Sarah M.','Dan R.','Priya K.','Tom H.','Michael O.',
           'Chloe B.','James W.','Aisha N.','Gary P.','Ellie T.'],
@@ -657,7 +657,7 @@ COPY.campaign = {
     m1:  ['yeah go on then, what have you got?',
           'perfect timing actually, yes please'],
     m2c: ['sorry, only just seen this. still interested',
-          'yes — meant to reply to the first one and forgot'],
+          'yes, meant to reply to the first one and forgot'],
     m4:  ['honestly i’d forgotten all about it. yes, still want it doing'],
     m2b: ['we got it done last year, thanks anyway',
           'not for us in the end, sorry']
@@ -665,10 +665,10 @@ COPY.campaign = {
 
   /* what each day of the campaign actually teaches */
   dayNotes: {
-    0:  'Everyone gets message 1 on the same morning. Two come straight back — one wants it, one does not. Eight say nothing, which is the normal case, not the failure case.',
+    0:  'Everyone gets message 1 on the same morning. Two come straight back: one wants it, one does not. Eight say nothing, which is the normal case, not the failure case.',
     3:  'Message 2c goes to the eight who stayed quiet. One of them replies. They were never a no, they just put the phone down.',
     7:  'Message 3 goes to the seven still quiet. Nothing comes back today. This is the day owners give up and delete the list.',
-    14: 'Message 4 — the one you did not want to send — goes to the seven. One books. Six never answer, and now you know that for certain.'
+    14: 'Message 4, the one you did not want to send, goes to the seven. One books. Six never answer, and now you know that for certain.'
   },
 
   statusLabels: { booked:'Booked', declined:'Declined', noreply:'No reply', waiting:'Waiting', fresh:'Not contacted' },
@@ -676,7 +676,7 @@ COPY.campaign = {
 
   done: {
     title: 'Ten leads, four messages, three bookings.',
-    body:  'You already had these people. They asked you for a price once and then life happened — to them, not to you.\n\nThe six who never answered are not a loss. You spent nothing to find out, and you will stop wondering about them.\n\nThe one who booked on message 4 is the whole argument. Most owners stop after message 2.'
+    body:  'You already had these people. They asked you for a price once and then life happened. To them, not to you.\n\nThe six who never answered are not a loss. You spent nothing to find out, and you will stop wondering about them.\n\nThe one who booked on message 4 is the whole argument. Most owners stop after message 2.'
   }
 };
 
@@ -913,7 +913,7 @@ function pushChain(id){
   S.animate = (tail && tail.k === 'send') ? last() : null;
 }
 /* on the second guided lead, hide branches that only lead back to an ending
-   already seen — the inbox makes no sense unless two different things happened */
+   already seen. The inbox makes no sense unless two different things happened */
 function openOpts(n){
   var seen = {}, i;
   for (i = 0; i < S.leadIdx; i++){
@@ -952,7 +952,7 @@ function screenIntro(){
   return '<div class="screen on">'
     + '<div class="eyebrow">Free tool · no signup</div>'
     + '<h1 class="h1">Your old leads are<br>not dead. They are<br><em>unanswered.</em></h1>'
-    + '<p class="sub">Answer three questions and walk through the five-message sequence that reopens them — including what to send when they go quiet, which is where almost every campaign falls over.</p>'
+    + '<p class="sub">Answer three questions and walk through the five-message sequence that reopens them, including what to send when they go quiet, which is where almost every campaign falls over.</p>'
     + '<div class="field"><label for="f-ind">What do you do?</label><div class="selwrap">'
       + '<select id="f-ind" class="'+(S.industry?'':'empty')+'"><option value="" disabled'+(S.industry?'':' selected')+'>Choose your industry</option>'+inds+'</select></div></div>'
     + '<div class="field"><label for="f-val">Average job value</label><div class="selwrap">'
@@ -1051,7 +1051,7 @@ function screenWalk(){
          + (op.tag ? '<span class="tag">'+esc(op.tag)+'</span>' : '') + '</button>';
     }
     var prompt = (opts.length < n.opts.length)
-      ? 'This one goes differently — you have seen where the other branch ends.'
+      ? 'This one goes differently. You have seen where the other branch ends.'
       : n.prompt;
     body += '<div class="choices"><h4>'+esc(prompt)+'</h4>'+o+'</div>'
       + '<div class="nav"><button class="back" id="back" aria-label="Back">'
@@ -1069,7 +1069,7 @@ function offerLineHtml(){
 function screenEnd(){
   var e = COPY.endings[S.outcome];
   var more = S.leadIdx < CONFIG.act1Leads - 1;
-  var cta  = more ? 'Next lead — ' + COPY.campaign.names[S.leadIdx + 1]
+  var cta  = more ? 'Next lead: ' + COPY.campaign.names[S.leadIdx + 1]
                   : CONFIG.act2.enterCta;
   return '<div class="screen on">' + railHtml()
     + '<div class="end">'
@@ -1114,7 +1114,7 @@ function screenInbox(){
   var C = CONFIG.act2, t = tally(), day = CONFIG.revealDays[S.dayIdx];
   var lastDay = S.dayIdx >= CONFIG.revealDays.length - 1;
 
-  /* tally bar — the whole point of act 2 */
+  /* tally bar, the whole point of act 2 */
   var chips = '<b>' + CONFIG.campaignSize + '</b> ' + esc(C.tally.messaged);
   var parts = [['booked', t.booked], ['declined', t.declined], ['noreply', t.noreply]];
   for (var q = 0; q < parts.length; q++)
@@ -1203,11 +1203,11 @@ function screenGate(){
   return '<div class="screen on"><div class="card">'
     + '<h2>Where should I send it?</h2>'
     + '<p class="lede">All five messages, written for '+esc(COPY.industries[S.industry].label.toLowerCase())
-      + ', with the send timings — as plain text you can paste anywhere.</p>'
+      + ', with the send timings. Plain text you can paste anywhere.</p>'
     + '<div class="err" id="err">That does not look like an email address.</div>'
     + '<input type="email" id="email" placeholder="you@yourbusiness.co.uk" autocomplete="email" inputmode="email">'
     + '<button class="btn" id="send">Send it over</button>'
-    + '<button class="skip" id="skip">No thanks — just show me the messages</button>'
+    + '<button class="skip" id="skip">No thanks, just show me the messages</button>'
     + '</div></div>';
 }
 
@@ -1219,12 +1219,12 @@ function sequenceText(){
     ''
   ];
   var order = [
-    ['m1',  'MESSAGE 1 — ' + MSG_TITLE.m1  + ' — ' + DAY_LABEL.m1],
-    ['m2a', 'MESSAGE 2A — ' + MSG_TITLE.m2a + ' — send the moment they reply interested'],
-    ['m2b', 'MESSAGE 2B — ' + MSG_TITLE.m2b + ' — send if they say no, then stop'],
-    ['m2c', 'MESSAGE 2C — ' + MSG_TITLE.m2c + ' — ' + DAY_LABEL.m2c + ', only if no reply'],
-    ['m3',  'MESSAGE 3 — '  + MSG_TITLE.m3  + ' — ' + DAY_LABEL.m3  + ', only if still no reply'],
-    ['m4',  'MESSAGE 4 — '  + MSG_TITLE.m4  + ' — ' + DAY_LABEL.m4  + ', only if still no reply']
+    ['m1',  'MESSAGE 1: ' + MSG_TITLE.m1  + ' (' + DAY_LABEL.m1 + ')'],
+    ['m2a', 'MESSAGE 2A: ' + MSG_TITLE.m2a + ' (send the moment they reply interested)'],
+    ['m2b', 'MESSAGE 2B: ' + MSG_TITLE.m2b + ' (send if they say no, then stop)'],
+    ['m2c', 'MESSAGE 2C: ' + MSG_TITLE.m2c + ' (' + DAY_LABEL.m2c + ', only if no reply)'],
+    ['m3',  'MESSAGE 3: '  + MSG_TITLE.m3  + ' (' + DAY_LABEL.m3  + ', only if still no reply)'],
+    ['m4',  'MESSAGE 4: '  + MSG_TITLE.m4  + ' (' + DAY_LABEL.m4  + ', only if still no reply)']
   ];
   for (var i = 0; i < order.length; i++){
     lines.push(order[i][1]); lines.push(S.seq[order[i][0]]); lines.push('');
@@ -1439,7 +1439,7 @@ function legacyCopy(text){
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-  } catch (err) { /* clipboard unavailable — the text is on screen and selectable */ }
+  } catch (err) { /* clipboard unavailable, the text is on screen and selectable */ }
 }
 
 function submitEmail(){
