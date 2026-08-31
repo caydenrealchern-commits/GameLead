@@ -8,10 +8,23 @@ Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
 
 ## Deploy
 
-`index.html` is the whole thing. Drag it into Netlify. No build step, no
+Two files: `index.html` and `og.png`. Drag the folder onto
+[app.netlify.com/drop](https://app.netlify.com/drop). No build step, no
 dependencies, no backend, no API keys, nothing metered. The optional lead
 webhook is the only network request the page can make; with `webhookUrl` blank
 it makes none at all.
+
+Then two things, in this order:
+
+1. **Replace `YOUR-DOMAIN`** — it appears four times in the `<head>` of
+   `index.html`, in the Open Graph and Twitter tags. Swap in the URL Netlify
+   gives you and re-drop the folder. Without this the link renders on LinkedIn
+   as a bare URL with no preview card, because scrapers need absolute image
+   URLs. Check it with LinkedIn's Post Inspector before posting.
+2. **Set `CONFIG.webhookUrl`** — until it has a value, the email gate accepts
+   addresses and discards them. If you would rather not collect emails at all
+   for now, set `gateEnabled: false` instead and the copy-out becomes ungated.
+   Either is fine; collecting into a blank webhook is not.
 
 ## Configure
 
