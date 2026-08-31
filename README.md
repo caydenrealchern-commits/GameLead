@@ -16,6 +16,18 @@ dependencies, no backend, no API keys, nothing metered. The optional lead
 webhook is the only network request the page can make; with `webhookUrl` blank
 it makes none at all.
 
+### Rebuilding the deploy zip
+
+Netlify Drop takes a zip, so bundle the three files whenever the page changes:
+
+```sh
+zip reactivation-builder-netlify.zip index.html og.png netlify.toml
+```
+
+The zip is gitignored on purpose. It is derived from those three files, and a
+committed copy would go stale the moment the page changed — anyone downloading
+it from the repo would deploy an old build.
+
 ### Order matters
 
 Netlify Drop gives you a random subdomain first, so pick your final site name

@@ -1,0 +1,4 @@
+# Build artifact: rebuilt from index.html + og.png + netlify.toml.
+# Deliberately untracked — a committed zip goes stale the moment the page
+# changes, and someone downloading it from GitHub would deploy the old build.
+reactivation-builder-netlify.zip
