@@ -4,7 +4,8 @@ An interactive guide that walks a business owner through a five-message SMS
 database-reactivation sequence written for their own business, including the
 branches most people get wrong.
 
-Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`.
+Built to spec: `2026-08-28-reactivation-sequence-builder-design.md`, then
+restructured to `docs/superpowers/specs/2026-08-31-owner-entered-inbox-design.md`.
 
 ## Deploy
 
@@ -12,7 +13,8 @@ Two files: `index.html` and `og.png`, plus an optional `netlify.toml` for
 caching and security headers. Drag them (or the zip) onto
 [app.netlify.com/drop](https://app.netlify.com/drop), no account required to
 deploy, though you need one to keep the site. No build step, no
-dependencies, no backend, no API keys, nothing metered. The optional lead
+dependencies, no backend, no API keys, nothing metered.
+
 The page makes no network requests at all. Nothing is collected, nothing is
 sent, and there is no backend to fail.
 
@@ -64,82 +66,88 @@ below, the direction they arrive from. `prefers-reduced-motion` and
 
 ## Structure
 
-Inbox-first. You name a real lead, walk their conversation, then see what the
-same sequence does to a whole list.
+Inbox-first, and every lead in it is one the owner actually has.
 
 ```
 INPUTS   industry · job value · how long cold
    │
-INBOX    empty, with one field: name a lead you actually have.
-         The row appears as "Not contacted". Tap it to open the thread.
+INBOX    empty. Add up to ten leads by name, one at a time.
+         Each row asks one question: what did this person do?
+         Replied · Said no · Went quiet
    │
-ACT 1    That lead's journey. You choose at both decision points.
-   │
-ACT 2    Ten leads. Yours sits at the top, already resolved; the other
-         nine run on a fixed distribution. Step day 0 → 3 → 7 → 14 and
-         watch the tally move. Any thread opens in full.
+THREAD   open any answered lead and read their sequence end to end,
+         with the teaching note under each message. One lead at a
+         time, because ten at once is not how a campaign is read.
    │
 COPY-OUT · OFFER
 ```
 
-Naming the lead is the only typing in the tool, and it is the point: a sequence
-addressed to "Dave Wilson" reads as something you might actually send, where the
-same screen headed "Your old lead" reads as a demo.
+Typing the names is the only typing in the tool, and it is the point. A
+sequence addressed to "Dave Wilson" reads as something you might actually
+send; the same screen headed "Your old lead" reads as a demo. Inventing ten
+names the owner has never met reads as a worse demo still, which is why the
+tool no longer does it.
 
-Act 1's single-lead machine:
-
-Five sends over roughly two weeks, two decision points, three terminal states:
+Five sends over roughly two weeks, two places a reply can arrive, three
+endings:
 
 ```
-Msg 1  Day 0 ─┬─ interested ──────► Msg 2a ──► won
-              ├─ not interested ──► Msg 2b ──► parked
-              └─ no reply ────────► Msg 2c  Day 3
-                                       ├─ replies ──► Msg 2a ──► won
-                                       └─ no reply ─► Msg 3  Day 7
-                                                       └─────► Msg 4  Day 14 ──► cleaned
+Msg 1  Day 0 ─┬─ replied ────────► Msg 2a ──► booked
+              ├─ said no ────────► Msg 2b ──► parked
+              └─ no reply ───────► Msg 2c  Day 3
+                                     ├─ replied ──► Msg 2a ──► booked
+                                     └─ no reply ─► Msg 3  Day 7
+                                                     └────► Msg 4  Day 14
+                                                              ├─ replied ─► Msg 2a
+                                                              └─ nothing ─► cleaned
 ```
 
-Nothing is gated. The whole walkthrough and the full five-message sequence are
-free to take, and the only call to action is booking a call to have the
-campaign run at scale.
+Nothing is gated. Every thread and the full five-message sequence are free to
+take, and the only call to action is booking a call to have the campaign run
+at scale.
 
-## The campaign distribution
+## Where a reply lands
 
-Ten leads always total **3 booked / 1 declined / 6 no reply**, with exactly one
-booking arriving off message 4. This is fixed, not randomised, a run where
-nobody books argues against the tool, and a run where everybody books is not
-believable.
+The owner says whether a lead replied, not when. Replying to message 1 and
+replying to message 4 are different conversations, so rather than ask a second
+question per lead, the nth replier takes the nth reply point from a three-step
+cycle: message 1, message 2c, message 4. Mark three leads as having replied
+and you get one of each, in that order, then it wraps.
 
-The totals are exact rather than approximate. The user's single lead claims one
-slot out of a fixed ten-slot pool, and whichever of the four possible outcomes
-they reach, the remaining nine still land on 3/1/6. The message-4 booking can
-never come from the user, because the state machine has no reply branch after
-message 4, so it is always one of the automatic nine.
+That is honest rather than decorative. Replies really do arrive spread across a
+sequence, and message 4 (the one nobody sends) getting an answer is the single
+thing the tool most wants an owner to see. Cycling puts it on screen without
+inventing an outcome the owner did not choose.
 
-The automatic leads are spread through the list by computation rather than a
-fixed table, so the layout holds however many slots the user claims.
-
-That exactness is what lets the day-by-day notes state hard numbers ("eight say
-nothing", "six never answer") instead of hedging.
+The tally counts only what the owner set, so an all-silent run stays all
+silent. The endings carry that case: four messages and no reply is still a
+result, because you now know a name is genuinely cold.
 
 ## Tests
 
-Two suites, both run in Chromium at 390px and 360px.
+Two Playwright suites against the real file in Chromium.
 
-`test.js` covers the act 1 machine: all four terminal paths, back-navigation
-out of each, day stamps, reduced motion, 360px overflow, and that no message is
-byte-identical across two industries.
+`test.js` drives the inbox: the three-answer gate, adding leads and every
+rejection (empty, whitespace-only, duplicate regardless of case, markup in a
+name never rendered as HTML), the cap at ten and the input coming back after a
+removal, each outcome rendering its own thread shape (send count, reply
+presence and position, silence beats, day stamps), the reply point cycling
+m1 / m2c / m4 across three repliers and wrapping on the fourth, the tally
+matching the set outcomes including an all-silent run, threads opening at the
+top and restoring inbox scroll on the way back, and the copy-out and offer with
+no email asked for anywhere and no raw template token left in the pasted text.
+It ends with a full-page overflow check at 360px and 390px.
 
-`test2.js` covers the naming step and the campaign: that an empty name is
-rejected, whitespace is normalised, renaming works, the name carries into the
-thread header and to the top of the campaign, and that markup typed into the
-name is never rendered as HTML. Then that the totals land on 3/1/6 with exactly
-one message-4 booking for every outcome the user can reach, that the reveal
-advances and the tally increments correctly day by day, skip-to-result, every
-thread opening and closing, back navigation from each new screen (including
-falling out of the walkthrough back to the inbox), and that continue reaches
-the copy-out and offer with no email asked for anywhere.
+`test2.js` covers what the flow cannot reach by clicking: that the page fetches
+nothing and references no external script, stylesheet or image; that the Open
+Graph and Twitter tags a link post depends on are present and absolute; that
+all 96 input combinations assemble six whole messages with no unfilled slot, no
+em dash and no spacing artifact; that all 288 thread variants (96 combos times
+three outcomes) render without throwing, with the right send count and the
+lead's name on screen; that no tap target is under 34px tall at 360px; and that
+`prefers-reduced-motion` removes the motion without removing the tool.
 
-A separate lint pass checks all 96 input combinations (576 messages) for
-assembly artifacts. An unhurried run reaches the final tally in about 40
-seconds.
+A separate lint pass reads all 576 assembled messages for repeated words,
+double punctuation and length.
+
+Both suites fail the run on any console error, not just a failed assertion.
