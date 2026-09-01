@@ -74,9 +74,9 @@ A single flat array replaces the campaign builder.
 S.leads = [ { name, outcome, replyAt } ]
 ```
 
-- `name` — owner-entered, trimmed, whitespace-collapsed, escaped on render.
-- `outcome` — `null` until set, then `'booked' | 'declined' | 'noreply'`.
-- `replyAt` — only meaningful when `outcome === 'booked'`. Assigned at set time
+- `name`: owner-entered, trimmed, whitespace-collapsed, escaped on render.
+- `outcome`: `null` until set, then `'booked' | 'declined' | 'noreply'`.
+- `replyAt`: only meaningful when `outcome === 'booked'`. Assigned at set time
   from the cycling counter: `'m1' | 'm2c' | 'm4'`.
 
 Thread shape is derived from `outcome` and `replyAt`, reusing the existing
