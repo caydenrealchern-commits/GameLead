@@ -72,28 +72,43 @@ const ok = (c,m) => { if(!c) fails.push(m); return c; };
     });
     ok(bad.length === 0, '3 combo problems ('+bad.length+'): '+bad.slice(0,6).join(' | '));
 
-    /* and each of them renders a thread without throwing */
+    /* and every path through a thread renders, in every combo */
     const rendered = await p.evaluate(() => {
       const inds = Object.keys(COPY.industries), vals = Object.keys(COPY.tones), colds = Object.keys(COPY.openers);
+      /* every path the owner can actually click, with its send count */
+      const PATHS = [
+        [[], 1], [['yes'], 2], [['no'], 2],
+        [['silent'], 2], [['silent','yes'], 3], [['silent','no'], 3],
+        [['silent','silent'], 3], [['silent','silent','yes'], 4], [['silent','silent','no'], 4],
+        [['silent','silent','silent'], 4],
+        [['silent','silent','silent','yes'], 5], [['silent','silent','silent','no'], 5],
+        [['silent','silent','silent','silent'], 4]
+      ];
       let n = 0, bad = [];
       for (const i of inds) for (const v of vals) for (const c of colds){
         S.industry=i; S.value=v; S.cold=c; S.seq=buildSequence(i,v,c);
-        S.leads=[{name:'Dave',outcome:null,replyAt:null}];
-        for (const o of ['booked','declined','noreply']){
-          setOutcome(0,o); S.openLead=0; S.screen='thread';
-          try { render(); } catch(e){ bad.push([i,v,c,o].join('/')+': '+e.message); continue; }
+        for (const [path, sends] of PATHS){
+          const tag = [i,v,c,'['+path.join(',')+']'].join('/');
+          S.leads=[{name:'Dave', path:path.slice()}];
+          S.openLead=0; S.screen='thread'; S.keepPlace=false;
+          try { render(); } catch(e){ bad.push(tag+': '+e.message); continue; }
           const outs = document.querySelectorAll('.bubble.out').length;
-          const want = o==='noreply' ? 4 : 2;
-          if (outs !== want) bad.push([i,v,c,o].join('/')+' sends '+outs+' want '+want);
-          if (document.body.innerText.includes('{n}')) bad.push([i,v,c,o].join('/')+' left {n} on screen');
-          if (!document.body.innerText.includes('Dave')) bad.push([i,v,c,o].join('/')+' never says Dave');
+          if (outs !== sends) bad.push(tag+' sends '+outs+' want '+sends);
+          const asking = !!document.querySelector('[data-step]');
+          const ended  = !!document.querySelector('.thread-end');
+          if (asking === ended) bad.push(tag+' is both asking and ended, or neither');
+          /* the booking ask belongs at the bottom of a finished conversation */
+          if (ended !== !!document.querySelector('#book-thread'))
+            bad.push(tag+' CTA does not match the ended state');
+          if (document.body.innerText.includes('{n}')) bad.push(tag+' left {n} on screen');
+          if (!document.body.innerText.includes('Dave')) bad.push(tag+' never says Dave');
           n++;
         }
       }
       return { n, bad };
     });
     ok(rendered.bad.length === 0, '3 thread render problems: '+rendered.bad.slice(0,6).join(' | '));
-    ok(rendered.n === 288, '3 rendered '+rendered.n+' threads, expected 288');
+    ok(rendered.n === 96 * 13, '3 rendered '+rendered.n+' threads, expected '+(96*13));
     await ctx.close();
   }
 
@@ -104,6 +119,7 @@ const ok = (c,m) => { if(!c) fails.push(m); return c; };
     await p.selectOption('#f-ind','hvac'); await p.selectOption('#f-val','b2'); await p.selectOption('#f-cold','mid');
     await p.click('#go'); await p.waitForTimeout(250);
     await p.fill('#leadname','Dave'); await p.click('#addlead'); await p.waitForTimeout(250);
+    await p.click('[data-lead="0"]'); await p.waitForTimeout(250);   // measure the decision buttons too
     const small = await p.evaluate(() => {
       const out = [];
       document.querySelectorAll('button, a.btn, select, input[type="text"]').forEach(el => {
@@ -125,8 +141,8 @@ const ok = (c,m) => { if(!c) fails.push(m); return c; };
     await p.selectOption('#f-ind','fitness'); await p.selectOption('#f-val','b1'); await p.selectOption('#f-cold','fresh');
     await p.click('#go'); await p.waitForTimeout(200);
     await p.fill('#leadname','Ann'); await p.click('#addlead'); await p.waitForTimeout(200);
-    await p.click('[data-set="0"][data-outcome="noreply"]'); await p.waitForTimeout(200);
     await p.click('[data-lead="0"]'); await p.waitForTimeout(200);
+    for (let i=0;i<4;i++){ await p.click('[data-step="silent"]'); await p.waitForTimeout(200); }
     ok((await p.$$('.bubble.out')).length === 4, '5 reduced motion thread did not render');
     const moving = await p.evaluate(() => {
       const out = [];

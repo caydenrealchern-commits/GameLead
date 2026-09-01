@@ -66,62 +66,67 @@ below, the direction they arrive from. `prefers-reduced-motion` and
 
 ## Structure
 
-Inbox-first, and every lead in it is one the owner actually has.
+Inbox first, and every lead in it is one the owner actually has. The tool
+never decides what a lead did; it only supplies the next message.
 
 ```
 INPUTS   industry · job value · how long cold
    │
 INBOX    empty. Add up to ten leads by name, one at a time.
-         Each row asks one question: what did this person do?
-         Replied · Said no · Went quiet
+         Each row shows where that conversation has got to.
    │
-THREAD   open any answered lead and read their sequence end to end,
-         with the teaching note under each message. One lead at a
-         time, because ten at once is not how a campaign is read.
+THREAD   opens on message 1, already written for their trade.
+         Then, after every send: what came back?
+         They replied · They said no · Nothing
+         The answer decides which message comes next.
+         The booking ask sits at the bottom, once it resolves.
    │
 COPY-OUT · OFFER
 ```
 
+Each lead carries a `path`: the list of answers the owner has given, one per
+message sent. An empty path is a conversation not yet started. `walk()` turns
+a path into the beats to draw plus either the stage still waiting on an answer
+or the ending it arrived at. Nothing in there decides anything, which is the
+point: every branch on screen is one the owner clicked.
+
+Five sends over roughly two weeks, a decision after each one, three endings:
+
+```
+Msg 1  Day 0 ─┬─ replied ──► Msg 2a ──► booked
+              ├─ said no ──► Msg 2b ──► parked
+              └─ nothing ──► Msg 2c  Day 3
+                               ├─ replied ──► Msg 2a ──► booked
+                               ├─ said no ──► Msg 2b ──► parked
+                               └─ nothing ──► Msg 3  Day 7
+                                                ├─ replied ─► Msg 2a
+                                                ├─ said no ─► Msg 2b
+                                                └─ nothing ─► Msg 4  Day 14
+                                                               ├─ replied ─► Msg 2a
+                                                               ├─ said no ─► Msg 2b
+                                                               └─ nothing ─► cleaned
+```
+
+A reply arriving off message 3 or 4 gets its own ending, because "they
+answered the message you nearly did not send" is a different lesson from "they
+answered straight away", and it is the one the tool most wants an owner to
+take away.
+
+Undo takes the last answer back off; restart takes the conversation back to
+message 1. Both are quiet text links, because they must never outweigh the
+question being asked.
+
+Nothing is gated anywhere. There is no email field. Every thread and the full
+five-message sequence are free to take, and the only call to action is booking
+a call to have the campaign run at scale, offered twice: at the bottom of a
+conversation that has just resolved, and on the copy-out screen.
+
 Typing the names is the only typing in the tool, and it is the point. A
 sequence addressed to "Dave Wilson" reads as something you might actually
-send; the same screen headed "Your old lead" reads as a demo. Inventing ten
-names the owner has never met reads as a worse demo still, which is why the
-tool no longer does it.
-
-Five sends over roughly two weeks, two places a reply can arrive, three
-endings:
-
-```
-Msg 1  Day 0 ─┬─ replied ────────► Msg 2a ──► booked
-              ├─ said no ────────► Msg 2b ──► parked
-              └─ no reply ───────► Msg 2c  Day 3
-                                     ├─ replied ──► Msg 2a ──► booked
-                                     └─ no reply ─► Msg 3  Day 7
-                                                     └────► Msg 4  Day 14
-                                                              ├─ replied ─► Msg 2a
-                                                              └─ nothing ─► cleaned
-```
-
-Nothing is gated. Every thread and the full five-message sequence are free to
-take, and the only call to action is booking a call to have the campaign run
-at scale.
-
-## Where a reply lands
-
-The owner says whether a lead replied, not when. Replying to message 1 and
-replying to message 4 are different conversations, so rather than ask a second
-question per lead, the nth replier takes the nth reply point from a three-step
-cycle: message 1, message 2c, message 4. Mark three leads as having replied
-and you get one of each, in that order, then it wraps.
-
-That is honest rather than decorative. Replies really do arrive spread across a
-sequence, and message 4 (the one nobody sends) getting an answer is the single
-thing the tool most wants an owner to see. Cycling puts it on screen without
-inventing an outcome the owner did not choose.
-
-The tally counts only what the owner set, so an all-silent run stays all
-silent. The endings carry that case: four messages and no reply is still a
-result, because you now know a name is genuinely cold.
+send; the same screen headed "Your old lead" reads as a demo. Filling the
+screen with ten invented names, or playing a two-week conversation out before
+the owner has even seen the first message, reads as a worse demo still. The
+tool did both at different points and does neither now.
 
 ## Tests
 
@@ -130,11 +135,13 @@ Two Playwright suites against the real file in Chromium.
 `test.js` drives the inbox: the three-answer gate, adding leads and every
 rejection (empty, whitespace-only, duplicate regardless of case, markup in a
 name never rendered as HTML), the cap at ten and the input coming back after a
-removal, each outcome rendering its own thread shape (send count, reply
-presence and position, silence beats, day stamps), the reply point cycling
-m1 / m2c / m4 across three repliers and wrapping on the fourth, the tally
-matching the set outcomes including an all-silent run, threads opening at the
-top and restoring inbox scroll on the way back, and the copy-out and offer with
+removal, that a thread opens on message 1
+alone with no reply, no silence and no booking ask on screen until the owner
+answers; that one answer produces exactly one more send and asks again; undo
+and restart; all seven paths through the tree, each checked for send count,
+reply and silence counts, teaching notes, ending text, header chip and inbox
+chip; the tally counting a half-run lead as mid sequence rather than as an
+outcome; threads opening at the top and restoring inbox scroll on the way back, and the copy-out and offer with
 no email asked for anywhere and no raw template token left in the pasted text.
 It ends with a full-page overflow check at 360px and 390px.
 
@@ -142,9 +149,10 @@ It ends with a full-page overflow check at 360px and 390px.
 nothing and references no external script, stylesheet or image; that the Open
 Graph and Twitter tags a link post depends on are present and absolute; that
 all 96 input combinations assemble six whole messages with no unfilled slot, no
-em dash and no spacing artifact; that all 288 thread variants (96 combos times
-three outcomes) render without throwing, with the right send count and the
-lead's name on screen; that no tap target is under 34px tall at 360px; and that
+em dash and no spacing artifact; that all 1,248 thread states (96 combos times the
+13 paths an owner can click) render without throwing, with the right send
+count, the lead's name on screen, and the booking ask present exactly when the
+conversation has resolved; that no tap target is under 34px tall at 360px; and that
 `prefers-reduced-motion` removes the motion without removing the tool.
 
 A separate lint pass reads all 576 assembled messages for repeated words,

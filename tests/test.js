@@ -24,10 +24,15 @@ async function add(p, name){
   await p.fill('#leadname', name);
   await p.click('#addlead'); await p.waitForTimeout(T);
 }
-async function set(p, i, outcome){
-  await p.click(`[data-set="${i}"][data-outcome="${outcome}"]`); await p.waitForTimeout(T);
-}
 async function open(p, i){ await p.click(`[data-lead="${i}"]`); await p.waitForTimeout(T); }
+async function step(p, answer){ await p.click(`[data-step="${answer}"]`); await p.waitForTimeout(T); }
+// run a lead's whole conversation from the inbox and come back to it
+async function run(p, i, ...answers){
+  await open(p, i);
+  for (const a of answers) await step(p, a);
+  await p.click('#toinbox2'); await p.waitForTimeout(T);
+}
+const SILENT4 = ['silent','silent','silent','silent'];
 const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
 
 (async () => {
@@ -90,89 +95,109 @@ const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
     await p.context().close();
   }
 
-  /* ---------- 4. each outcome renders its own thread ---------- */
+  /* ---------- 4. a thread reveals one message at a time ---------- */
   {
     const p = await page(browser); await intro(p);
-    await add(p,'Ann'); await add(p,'Ben'); await add(p,'Cal');
+    await add(p,'Ann');
+    ok((await p.$$('.row .chip')).length === 1, '4 row has no status chip');
+    ok(/Not started/.test((await txt(p,'.row .chip'))[0]), '4 a fresh lead is not marked Not started');
 
-    // Ann books -> first replier -> replies at m1: 2 sends, reply after send 1
-    await set(p,0,'booked'); await open(p,0);
-    let outs = await p.$$('.bubble.out'), ins = await p.$$('.bubble.in'), sil = await p.$$('.bubble.silent');
-    ok(outs.length === 2, '4 m1-reply thread has '+outs.length+' sends, expected 2');
-    ok(ins.length === 1, '4 m1-reply thread has '+ins.length+' replies, expected 1');
-    ok(sil.length === 0, '4 m1-reply thread shows silence');
-    ok((await p.$$('.tnote')).length === 2, '4 m1-reply thread notes do not match sends');
-    let order = await p.$$eval('.thread > div', ns => ns.map(n=>n.className));
-    ok(order.filter(c=>/bubble/.test(c)).join('|') === 'bubble out|bubble in|bubble out',
-       '4 m1-reply beat order wrong: '+order.join(','));
-    ok(/Booked/.test(await p.$eval('.thread-head .chip', n=>n.textContent)), '4 booked chip missing in thread');
-    await p.click('#toinbox2'); await p.waitForTimeout(T);
+    await open(p,0);
+    // the owner must see message 1 before being asked anything
+    ok((await p.$$('.bubble.out')).length === 1, '4 thread does not open on message 1 alone');
+    ok((await p.$$('.bubble.in')).length === 0, '4 a reply is on screen before the owner answered');
+    ok((await p.$$('.bubble.silent')).length === 0, '4 silence is on screen before the owner answered');
+    ok(!!(await p.$('#decide')), '4 no question at the live end of the thread');
+    ok((await p.$$('[data-step]')).length === 3, '4 the question does not offer three answers');
+    ok(/Ann/.test(await p.$eval('#decide .ask', n => n.textContent)), '4 the question does not name the lead');
+    ok(!(await p.$('#book-thread')), '4 the booking CTA shows before the conversation resolves');
+    ok(!(await p.$('#undo')), '4 undo offered before any answer was given');
+    ok(/Day 0/.test(await p.$eval('.thread-head .chip', n => n.textContent)),
+       '4 the header does not say where the conversation is');
 
-    // Ben declines: 2 sends, reply after send 1, no silence
-    await set(p,1,'declined'); await open(p,1);
-    outs = await p.$$('.bubble.out'); ins = await p.$$('.bubble.in'); sil = await p.$$('.bubble.silent');
-    ok(outs.length === 2, '4 declined thread has '+outs.length+' sends, expected 2');
-    ok(ins.length === 1, '4 declined thread has '+ins.length+' replies, expected 1');
-    ok(sil.length === 0, '4 declined thread shows silence');
-    ok(/Said no/.test(await p.$eval('.thread-head .chip', n=>n.textContent)), '4 declined chip wrong');
-    await p.click('#toinbox2'); await p.waitForTimeout(T);
-
-    // Cal goes quiet: 4 sends, no reply, 3 silences
-    await set(p,2,'noreply'); await open(p,2);
-    outs = await p.$$('.bubble.out'); ins = await p.$$('.bubble.in'); sil = await p.$$('.bubble.silent');
-    ok(outs.length === 4, '4 quiet thread has '+outs.length+' sends, expected 4');
-    ok(ins.length === 0, '4 quiet thread has a reply');
-    ok(sil.length === 3, '4 quiet thread has '+sil.length+' silences, expected 3');
-    ok((await p.$$('.tnote')).length === 4, '4 quiet thread notes do not match sends');
+    // one answer, one more message, and the question comes back
+    await step(p,'silent');
+    ok((await p.$$('.bubble.out')).length === 2, '4 answering did not produce exactly one more send');
+    ok((await p.$$('.bubble.silent')).length === 1, '4 the silence gap is missing');
+    ok(!!(await p.$('#decide')), '4 the question did not come back after message 2c');
+    ok(/Day 3/.test(await p.$eval('.thread-head .chip', n => n.textContent)), '4 header day did not advance');
+    ok(!!(await p.$('#undo')), '4 undo not offered after an answer');
     const days = await txt(p,'.daystamp');
-    ok(days.join('|') === 'Day 0|Day 3|Day 7|Day 14', '4 quiet day stamps wrong: '+days.join('|'));
+    ok(days.join('|') === 'Day 0|Day 3', '4 day stamps wrong: '+days.join('|'));
+
+    // undo takes the last message back off
+    await p.click('#undo'); await p.waitForTimeout(T);
+    ok((await p.$$('.bubble.out')).length === 1, '4 undo did not remove the last send');
+    ok(!(await p.$('#undo')), '4 undo still offered with an empty path');
     await p.context().close();
   }
 
-  /* ---------- 5. the reply point cycles across repliers ---------- */
+  /* ---------- 5. every path ends where it should ---------- */
   {
     const p = await page(browser); await intro(p);
-    await add(p,'Ann'); await add(p,'Ben'); await add(p,'Cal'); await add(p,'Dee');
-    for (const i of [0,1,2]) await set(p,i,'booked');
-    const sends = [];
-    for (const i of [0,1,2]){
-      await open(p,i);
-      sends.push((await p.$$('.bubble.out')).length);
+    const cases = [
+      // answers,                      sends, replies, silences, ending fragment, chip
+      [['yes'],                            2, 1, 0, 'whole point',      'Booked'],
+      [['no'],                             2, 1, 0, 'A no is a result', 'Said no'],
+      [['silent','yes'],                   3, 1, 1, 'whole point',      'Booked'],
+      [['silent','no'],                    3, 1, 1, 'A no is a result', 'Said no'],
+      [['silent','silent','yes'],          4, 1, 2, 'never send',       'Booked'],
+      [['silent','silent','silent','yes'], 5, 1, 3, 'never send',       'Booked'],
+      [SILENT4,                            4, 0, 3, 'still gained',     'No reply']
+    ];
+    for (let c = 0; c < cases.length; c++){
+      const [answers, sends, replies, silences, ending, chip] = cases[c];
+      const tag = '5 ['+answers.join(',')+']';
+      await add(p, 'Lead '+c);
+      await open(p, c);
+      for (const a of answers) await step(p, a);
+
+      ok((await p.$$('.bubble.out')).length === sends,
+         tag+' sends '+(await p.$$('.bubble.out')).length+', expected '+sends);
+      ok((await p.$$('.bubble.in')).length === replies, tag+' reply count wrong');
+      ok((await p.$$('.bubble.silent')).length === silences, tag+' silence count wrong');
+      ok((await p.$$('.tnote')).length === sends, tag+' a send is missing its teaching note');
+      ok(!(await p.$('[data-step]')), tag+' still asking after the conversation ended');
+      const end = await p.$eval('.thread-end', n => n.textContent);
+      ok(end.includes(ending), tag+' wrong ending: '+end.slice(0,70));
+      // the ask sits at the bottom of the conversation it just earned
+      ok(!!(await p.$('#book-thread')), tag+' no booking CTA at the end of the thread');
+      const href = await p.$eval('#book-thread', a => a.getAttribute('href'));
+      ok(/^https:\/\//.test(href), tag+' thread CTA link is not absolute: '+href);
+      ok(new RegExp(chip).test(await p.$eval('.thread-head .chip', n => n.textContent)),
+         tag+' header chip is not '+chip);
+
       await p.click('#toinbox2'); await p.waitForTimeout(T);
+      ok(new RegExp(chip).test((await txt(p,'.row .chip'))[c]), tag+' inbox chip is not '+chip);
     }
-    ok(sends.join(',') === '2,3,5',
-       '5 reply points did not cycle m1/m2c/m4 (send counts '+sends.join(',')+', expected 2,3,5)');
-
-    // a fourth replier wraps back to m1
-    await set(p,3,'booked'); await open(p,3);
-    ok((await p.$$('.bubble.out')).length === 2, '5 fourth replier did not wrap to the m1 reply point');
-    await p.click('#toinbox2'); await p.waitForTimeout(T);
-
-    // clearing the first replier re-cycles the rest without breaking
-    await p.click('[data-clear="0"]'); await p.waitForTimeout(T);
-    ok((await p.$$('.row.unset')).length === 1, '5 change did not return the row to unset');
-    ok((await p.$$('.pick')).length === 1, '5 unset row lost its three-way choice');
     await p.context().close();
   }
 
-  /* ---------- 6. tally matches the set outcomes ---------- */
+  /* ---------- 6. tally counts what the owner actually ran ---------- */
   {
     const p = await page(browser); await intro(p);
     for (const n of ['Ann','Ben','Cal','Dee','Eve']) await add(p,n);
     let t = await p.$eval('.tally-nums', n => n.textContent.replace(/\s+/g,' ').trim());
-    ok(/^5 leads .*5 (not answered|to answer|left)/i.test(t) || /5/.test(t), '6 tally with none set: '+t);
-    ok(!(await p.$('#tocopy')), '6 continue offered with no outcome set');
+    ok(/5 leads/.test(t) && /5 not started/.test(t), '6 tally with nothing run: '+t);
+    ok(!(await p.$('#tocopy')), '6 continue offered before any conversation ran');
 
-    await set(p,0,'booked'); await set(p,1,'declined');
-    await set(p,2,'noreply'); await set(p,3,'noreply'); await set(p,4,'noreply');
+    // a half-run lead counts as mid sequence, not as an outcome
+    await open(p,0); await step(p,'silent');
+    await p.click('#toinbox'); await p.waitForTimeout(T);
+    t = await p.$eval('.tally-nums', n => n.textContent.replace(/\s+/g,' ').trim());
+    ok(/1 mid sequence/.test(t), '6 a half-run lead is not counted as mid sequence: '+t);
+    ok(!(await p.$('#tocopy')), '6 continue offered on a half-run conversation');
+
+    await run(p,0,'silent','yes');          // Ann finishes: booked
+    await run(p,1,'no');                    // Ben: said no
+    await run(p,2,...SILENT4);              // Cal, Dee, Eve: no reply
+    await run(p,3,...SILENT4);
+    await run(p,4,...SILENT4);
     t = await p.$eval('.tally-nums', n => n.textContent.replace(/\s+/g,' ').trim());
     const nums = (t.match(/\d+/g)||[]).map(Number);
     ok(nums[0] === 5, '6 tally lead count wrong: '+t);
     ok(nums.slice(1).join(',') === '1,1,3', '6 tally split wrong: '+t+' (expected 1 booked, 1 no, 3 quiet)');
-    ok(!!(await p.$('#tocopy')), '6 continue not offered once outcomes are set');
-    await p.click('#tocopy'); await p.waitForTimeout(T);
-    ok(/five leads/.test(await p.$eval('.offer h3', n => n.textContent)),
-       '6 offer heading does not match five leads');
+    ok(!!(await p.$('#tocopy')), '6 continue not offered once a conversation finished');
     await p.context().close();
   }
 
@@ -180,12 +205,16 @@ const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
   {
     const p = await page(browser); await intro(p);
     await add(p,'Ann'); await add(p,'Ben');
-    await set(p,0,'noreply'); await set(p,1,'noreply');
+    await run(p,0,...SILENT4); await run(p,1,...SILENT4);
     ok(!!(await p.$('#tocopy')), '7 all-silent run cannot continue');
     await open(p,0);
     ok((await p.$$('.bubble.out')).length === 4, '7 all-silent thread short');
-    const end = await p.$eval('.end', n => n.textContent);
+    const end = await p.$eval('.thread-end', n => n.textContent);
     ok(end.length > 60, '7 all-silent ending is thin: '+end.slice(0,80));
+    // and it can be run again from scratch
+    await p.click('#reset'); await p.waitForTimeout(T);
+    ok((await p.$$('.bubble.out')).length === 1, '7 restart did not take the thread back to message 1');
+    ok(!!(await p.$('[data-step]')), '7 restart left no question to answer');
     await p.context().close();
   }
 
@@ -193,7 +222,7 @@ const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
   {
     const p = await page(browser); await intro(p);
     for (let i=1;i<=8;i++) await add(p,'Lead '+i);
-    for (let i=0;i<8;i++) await set(p,i,'noreply');
+    for (let i=0;i<8;i++) await run(p,i,...SILENT4);
     await p.evaluate(() => window.scrollTo(0, 600)); await p.waitForTimeout(200);
     const before = await p.evaluate(() => window.pageYOffset);
     ok(before > 200, '8 page did not scroll, test is meaningless');
@@ -208,7 +237,7 @@ const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
   /* ---------- 9. copy-out and offer, with no email anywhere ---------- */
   {
     const p = await page(browser); await intro(p,'dental','b2','fresh');
-    await add(p,'Ann'); await set(p,0,'booked');
+    await add(p,'Ann'); await run(p,0,'yes');
     await p.click('#tocopy'); await p.waitForTimeout(T);
     const out = await p.$eval('#out', n => n.textContent);
     for (const m of ['MESSAGE 1','MESSAGE 2A','MESSAGE 2B','MESSAGE 2C','MESSAGE 3','MESSAGE 4'])
@@ -240,8 +269,8 @@ const txt = (p,s) => p.$$eval(s, ns => ns.map(n => n.textContent.trim()));
     const p = await page(browser, { viewport:{width:w,height:844}, reducedMotion:'reduce' });
     await intro(p);
     await add(p,'Christopher Wetherby');
-    await set(p,0,'booked');
     await open(p,0);
+    await step(p,'silent'); await step(p,'silent'); await step(p,'silent'); await step(p,'yes');
     await p.click('#toinbox2'); await p.waitForTimeout(T);
     await p.click('#tocopy'); await p.waitForTimeout(T);
     const bad = await p.evaluate(() => {
